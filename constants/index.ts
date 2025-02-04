@@ -26,12 +26,15 @@ import to from "@/assets/icons/to.png";
 import check from "@/assets/images/check.png";
 import message from "@/assets/images/message.png";
 import noResult from "@/assets/images/no-result.png";
+import logo from "@/assets/images/logo.png";
+
 
 
 export const images = {
   check,
   noResult,
   message,
+  logo,
 };
 
 export const icons = {

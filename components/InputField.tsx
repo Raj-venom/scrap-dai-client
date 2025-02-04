@@ -11,6 +11,7 @@ const InputField = ({
     inputStyle,
     iconStyle,
     className,
+    error,
     ...props
 }: InputFieldProps) => {
 
@@ -41,6 +42,7 @@ const InputField = ({
                             {...props}
                         />
                     </View>
+                    {error && <Text className="text-red-500 mt-1 ml-2">{error}</Text>}
                 </View>
             </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
