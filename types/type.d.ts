@@ -38,3 +38,11 @@ declare interface InputFieldProps extends TextInputProps {
     className?: string;
     error?: string;
 }
+
+
+declare interface userRegisterProps {
+    fullName: string;
+    email: string;
+    password: string;
+    phone: string;
+}
