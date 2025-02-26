@@ -36,10 +36,12 @@ const SignIn = () => {
 
       if (response.statusCode === 200) {
         console.log("sucess", response)
-        if (response.data.user) {
+        if (response.data.user.role === 'user') {
           Alert.alert('Success', 'user Login successful')
-        } else if (response.data.collector) {
+        } else if (response.data.user.role === 'collector') {
           Alert.alert('Success', 'collector Login successful')
+        } else {
+          Alert.alert('Error', 'Aunauthorized user role')
         }
       } else {
         Alert.alert('Error', response.message)
@@ -93,13 +95,20 @@ const SignIn = () => {
             error={errors.password}
           />
 
-
-
           <CustomButton
             title='Login'
             onPress={onSignUpPress}
             className='mt-6'
           />
+
+          <Link
+            href="/forgot-password"
+            className='text-lg text-right text-primary mt-2'
+          >
+            Forgot Password?
+          </Link>
+
+
 
           <Link
             href="/sign-up"
