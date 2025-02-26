@@ -3,8 +3,11 @@ import React, { useState } from 'react'
 import { icons, images } from '@/constants'
 import InputField from '@/components/InputField'
 import CustomButton from '@/components/CustomButton'
-import { Link } from 'expo-router'
+import { Link, router } from 'expo-router'
 import authService from '@/services/auth'
+import { setTokens } from '@/services/token/tokenService'
+import { useDispatch } from "react-redux"
+import { login as authLogin } from '@/contexts/features/auth/authSlice'
 
 const SignIn = () => {
 
@@ -16,6 +19,8 @@ const SignIn = () => {
     identifier?: string;
     password?: string;
   }>({});
+  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch()
 
   const onSignUpPress = async () => {
     let newErrors: { identifier?: string; password?: string } = {};
@@ -31,24 +36,52 @@ const SignIn = () => {
     }
 
     try {
+      setLoading(true);
 
       const response = await authService.login(form);
+      // console.log(response)
 
-      if (response.statusCode === 200) {
-        console.log("sucess", response)
-        if (response.data.user.role === 'user') {
-          Alert.alert('Success', 'user Login successful')
-        } else if (response.data.user.role === 'collector') {
-          Alert.alert('Success', 'collector Login successful')
-        } else {
-          Alert.alert('Error', 'Aunauthorized user role')
-        }
-      } else {
+      if(!response.success) {
         Alert.alert('Error', response.message)
+        return
       }
+
+      // if (response.statusCode === 200) {
+      //   console.log("sucess", response)
+      //   if (response.data.user.role === 'user') {
+      //     Alert.alert('Success', 'user Login successful')
+      //   } else if (response.data.user.role === 'collector') {
+      //     Alert.alert('Success', 'collector Login successful')
+      //   } else {
+      //     Alert.alert('Error', 'Aunauthorized user role')
+      //   }
+      // } else {
+      //   Alert.alert('Error', response.message)
+      // }
+
+      if (response.success) {
+
+        await setTokens(response.data.accessToken, response.data.refreshToken);
+
+        const userDataResponse = await authService.getCurrentUser();
+
+        if (userDataResponse.success) {
+
+          dispatch(authLogin({ userData: userDataResponse.data }))
+          Alert.alert('Success', 'Login successful')
+          router.replace('/(user)')
+        } else {
+          Alert.alert('Error', userDataResponse.message)
+        }
+
+      }
+
+
 
     } catch (error: any) {
       Alert.alert('Error', error?.message)
+    } finally {
+      setLoading(false);
     }
 
 
@@ -95,12 +128,6 @@ const SignIn = () => {
             error={errors.password}
           />
 
-          <CustomButton
-            title='Login'
-            onPress={onSignUpPress}
-            className='mt-6'
-          />
-
           <Link
             href="/forgot-password"
             className='text-lg text-right text-primary mt-2'
@@ -108,7 +135,11 @@ const SignIn = () => {
             Forgot Password?
           </Link>
 
-
+          <CustomButton
+            title='Login'
+            onPress={onSignUpPress}
+            className='mt-6'
+          />
 
           <Link
             href="/sign-up"
