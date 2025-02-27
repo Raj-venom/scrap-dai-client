@@ -1,6 +1,6 @@
 import { userRegisterProps } from "@/types/type";
-import API from "./api";
-import { removeTokens, setTokens } from "./token/tokenService";
+import API from "../api";
+import { removeTokens, setTokens } from "../token/tokenService";
 
 class AuthService {
 
@@ -45,6 +45,7 @@ class AuthService {
                 identifier,
                 password
             });
+
 
             return response.data;
 
@@ -161,6 +162,6 @@ class AuthService {
 }
 
 
-const authService = new AuthService();
+const userAuthService = new AuthService();
 
-export default authService;
+export default userAuthService;

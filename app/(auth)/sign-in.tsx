@@ -1,15 +1,21 @@
-import { View, Text, ScrollView, Image, Alert } from 'react-native'
+import { View, Text, ScrollView, Image, Alert, Switch } from 'react-native'
 import React, { useState } from 'react'
 import { icons, images } from '@/constants'
 import InputField from '@/components/InputField'
 import CustomButton from '@/components/CustomButton'
 import { Link, router } from 'expo-router'
-import authService from '@/services/auth'
-import { setTokens } from '@/services/token/tokenService'
-import { useDispatch } from "react-redux"
+import userAuthService from '@/services/user/auth'
+import { setRole, setTokens } from '@/services/token/tokenService'
+import { useDispatch, useSelector } from "react-redux"
 import { login as authLogin } from '@/contexts/features/auth/authSlice'
+import ModeToggle from '@/components/ModeToggle'
+
+
+
 
 const SignIn = () => {
+
+  const userMode = useSelector((state: any) => state.auth.userMode)
 
   const [form, setForm] = useState({
     identifier: '',
@@ -38,10 +44,10 @@ const SignIn = () => {
     try {
       setLoading(true);
 
-      const response = await authService.login(form);
+      const response = await userAuthService.login(form);
       // console.log(response)
 
-      if(!response.success) {
+      if (!response.success) {
         Alert.alert('Error', response.message)
         return
       }
@@ -60,10 +66,11 @@ const SignIn = () => {
       // }
 
       if (response.success) {
-
+        console.log(response.data.refreshToken, "refreshToken from login")
         await setTokens(response.data.accessToken, response.data.refreshToken);
+        await setRole(response.data.user.role);
 
-        const userDataResponse = await authService.getCurrentUser();
+        const userDataResponse = await userAuthService.getCurrentUser();
 
         if (userDataResponse.success) {
 
@@ -128,12 +135,19 @@ const SignIn = () => {
             error={errors.password}
           />
 
-          <Link
-            href="/forgot-password"
-            className='text-lg text-right text-primary mt-2'
-          >
-            Forgot Password?
-          </Link>
+          <View className='flex-row items-center justify-between'>
+
+
+            <ModeToggle />
+
+
+            <Link
+              href="/forgot-password"
+              className='text-lg text-right text-primary'
+            >
+              Forgot Password?
+            </Link>
+          </View>
 
           <CustomButton
             title='Login'
@@ -152,10 +166,15 @@ const SignIn = () => {
         </View>
 
 
+        <Text className='text-lg text-center text-primary'>
+          {userMode || "guest"}
+        </Text>
+
+
 
 
       </View>
-    </ScrollView>
+    </ScrollView >
   )
 }
 

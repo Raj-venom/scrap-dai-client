@@ -90,3 +90,12 @@ export const onboarding = [
 export const data = {
   onboarding,
 };
+
+
+export const GENDER = ["Male", "Female", "Other"];
+
+export const USER_ROLE = {
+  ADMIN: "admin",
+  COLLECTOR: "collector",
+  USER: "user"
+};

@@ -17,12 +17,24 @@ async function getRefreshToken(): Promise<string | null> {
 async function removeTokens(): Promise<void> {
     await SecureStore.deleteItemAsync('accessToken');
     await SecureStore.deleteItemAsync('refreshToken');
+    await SecureStore.deleteItemAsync('role');
 }
+
+async function setRole(role: string): Promise<void> {
+    await SecureStore.setItemAsync('role', role);
+}
+
+async function getRole(): Promise<string | null> {
+    return await SecureStore.getItemAsync('role');
+}
+
 
 
 export {
     setTokens,
     getAccessToken,
     getRefreshToken,
-    removeTokens
+    removeTokens,
+    setRole,
+    getRole,
 }

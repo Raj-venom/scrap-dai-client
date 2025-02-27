@@ -1,5 +1,8 @@
+import { USER_ROLE } from "@/constants";
 import { login, logout } from "@/contexts/features/auth/authSlice";
-import authService from "@/services/auth";
+import collectorAuthService from "@/services/collector/collectorAuth";
+import { getRole } from "@/services/token/tokenService";
+import userAuthService from "@/services/user/auth";
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
@@ -12,25 +15,51 @@ export default function Index() {
   const [loading, setLoading] = useState(true)
 
 
-  useEffect(() => {
-    setLoading(true)
-    authService.getCurrentUser().then((response) => {
+  const currentUser = async () => {
+    const role = await getRole();
+
+    if (role === USER_ROLE.USER) {
+      const response = await userAuthService.getCurrentUser()
+
       if (response.success) {
         dispatch(login({ userData: response.data }))
       } else {
         dispatch(logout())
       }
-    }).finally(() => {
-      setLoading(false)
-    })
 
-  }, [])
+    } else if (role === USER_ROLE.COLLECTOR) {
+      const response = await collectorAuthService.getCurrentUser()
+      
+      if (response.success) {
+        dispatch(login({ userData: response.data }))
+      } else {
+        dispatch(logout())
+      }
+    }
+
+
+
+
+  }
+
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true); 
+      await currentUser(); 
+      setLoading(false); 
+    };
+
+    fetchData();
+  }, [dispatch]);
 
 
   if (loading) {
     return (
       <View>
         <Text>Loading...</Text>
+
+
       </View>
     )
   }
@@ -40,7 +69,7 @@ export default function Index() {
       <Redirect href="/(user)" />
     )
   }
-  
+
   if (!loading && !authStatus) {
     return (
       <Redirect href="/(auth)/welcome" />

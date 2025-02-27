@@ -4,7 +4,7 @@ import { Link, useRouter } from 'expo-router'
 import { icons, images } from '@/constants'
 import InputField from '@/components/InputField'
 import CustomButton from '@/components/CustomButton'
-import authService from '@/services/auth'
+import userAuthService from '@/services/user/auth'
 import { ReactNativeModal } from "react-native-modal";
 
 const SignUp = () => {
@@ -52,7 +52,7 @@ const SignUp = () => {
     }
 
     try {
-      const response = await authService.createAccount(form)
+      const response = await userAuthService.createAccount(form)
 
       if (response.statusCode === 201) {
         console.log("sucess", response)
@@ -76,7 +76,7 @@ const SignUp = () => {
 
   const onVerifyPress = async () => {
     try {
-      const response = await authService.verifyUser({
+      const response = await userAuthService.verifyUser({
         email: form.email,
         otp: verification.code
       })
