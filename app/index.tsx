@@ -29,7 +29,7 @@ export default function Index() {
 
     } else if (role === USER_ROLE.COLLECTOR) {
       const response = await collectorAuthService.getCurrentUser()
-      
+
       if (response.success) {
         dispatch(login({ userData: response.data }))
       } else {
@@ -44,13 +44,8 @@ export default function Index() {
 
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true); 
-      await currentUser(); 
-      setLoading(false); 
-    };
-
-    fetchData();
+    setLoading(true);
+    currentUser().finally(() => setLoading(false))
   }, [dispatch]);
 
 
