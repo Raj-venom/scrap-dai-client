@@ -1,8 +1,7 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { Ionicons } from "@expo/vector-icons";
+import { useState } from 'react';
+import { View, Text, ScrollView } from 'react-native';
 import ScrapCategory from '@/components/ScrapCategory';
+import NextButton from '@/components/NextButton';
 
 // Define typings for material data
 interface ScrapMaterial {
@@ -60,24 +59,33 @@ const scrapMaterials: ScrapMaterial[] = [
 ];
 
 export default function SellScrapScreen(): JSX.Element {
-  const router = useRouter();
+  const [selectedMaterials, setSelectedMaterials] = useState<number[]>([]);
 
-  // Handle material selection
-  const handleMaterialSelect = (materialId: number): void => {
-    console.log('Selected material:', materialId);
+  const handleToggleSelect = (id: number) => {
+    setSelectedMaterials(prevSelected => {
+      // If already selected, remove it
+      if (prevSelected.includes(id)) {
+        return prevSelected.filter(materialId => materialId !== id);
+      }
+      // If not selected, add it
+      else {
+        return [...prevSelected, id];
+      }
+    });
+  };
 
+  // Check if a material is selected
+  const isSelected = (id: number) => {
+    return selectedMaterials.includes(id);
   };
 
   return (
     <View className="flex-1 bg-white">
-      {/* Progress steps */}
-      {/* <ProgressSteps currentStep={1} /> */}
-
       {/* Main content */}
-      <ScrollView className="flex-1 px-4 py-6">
+      <ScrollView className="flex-1 px-4 py-4">
         <Text className="text-lg font-JakartaBold mb-2">Select Scrap material</Text>
 
-        <View className="flex-row flex-wrap mx-2 justify-between">
+        <View className="flex-row flex-wrap w-full justify-between">
           {scrapMaterials.map((material) => (
             <ScrapCategory
               key={material.id}
@@ -85,21 +93,18 @@ export default function SellScrapScreen(): JSX.Element {
               type={material.type}
               description={material.description}
               iconName={material.iconName}
-              onSelect={handleMaterialSelect}
+              isSelected={isSelected(material.id)}
+              onToggleSelect={handleToggleSelect}
             />
           ))}
         </View>
       </ScrollView>
 
       {/* Next button */}
-      <View className="p-4">
-        <TouchableOpacity
-          className="bg-green-500 h-12 w-12 rounded-full items-center justify-center self-end"
-          onPress={() => router.push('/select-category')}
-        >
-          <Ionicons name="arrow-forward" size={24} color="white" />
-        </TouchableOpacity>
+      <View className="p-7 z-10">
+        <NextButton isFormComplete={selectedMaterials.length > 0} nextRoute="/select-category" />
       </View>
+
     </View>
   );
 }

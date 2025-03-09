@@ -15,7 +15,7 @@ export default function ProgressSteps({ currentStep }: ProgressStepsProps): JSX.
     ];
 
     return (
-        <View className="pt-3 px-3 bg-white border-t border-gray-200">
+        <View className="pt-3 px-4 bg-white border-t border-gray-200">
             <View className="flex-row items-center justify-between relative">
                 {/* Connecting Line */}
                 <View className="absolute top-3 left-5 right-5 h-0.5 bg-gray-200" />
