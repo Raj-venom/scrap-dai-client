@@ -27,6 +27,7 @@ import check from "@/assets/images/check.png";
 import message from "@/assets/images/message.png";
 import noResult from "@/assets/images/no-result.png";
 import logo from "@/assets/images/logo.png";
+import collector from "@/assets/images/collector.jpg";
 
 
 
@@ -35,6 +36,7 @@ export const images = {
   noResult,
   message,
   logo,
+  collector
 };
 
 export const icons = {

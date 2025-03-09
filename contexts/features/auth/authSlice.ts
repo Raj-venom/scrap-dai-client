@@ -1,9 +1,11 @@
+import { USER_ROLE } from '@/constants';
 import { createSlice } from '@reduxjs/toolkit';
+
 
 const initialState = {
     status: false,
     userData: null,
-    userMode: null
+    userMode: USER_ROLE.USER,
 }
 
 const authSlice = createSlice({

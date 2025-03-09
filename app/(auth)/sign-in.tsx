@@ -75,7 +75,7 @@ const SignIn = () => {
         if (userDataResponse.success) {
 
           dispatch(authLogin({ userData: userDataResponse.data }))
-          Alert.alert('Success', 'Login successful')
+          // Alert.alert('Success', 'Login successful')
           router.replace('/(user)')
         } else {
           Alert.alert('Error', userDataResponse.message)
@@ -99,7 +99,7 @@ const SignIn = () => {
       <View className='flex-1 bg-secondary'>
 
         <View >
-          <Image source={images.logo} resizeMode='cover' className='w-52 h-52 rounded-full self-center' />
+          <Image source={userMode === "user" ? images.logo : images.collector} resizeMode='cover' className='w-52 h-52 rounded-full self-center' />
           <Text className='text-2xl ml-1
            text-textcolor-500 font-JakartaSemiBold'>
             Welcome Back
@@ -153,6 +153,7 @@ const SignIn = () => {
             title='Login'
             onPress={onSignUpPress}
             className='mt-6'
+            loading={loading}
           />
 
           <Link

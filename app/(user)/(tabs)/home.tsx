@@ -44,7 +44,7 @@ export default function HomeScreen() {
             <MenuButton
                 title="Sell your scrap"
                 subtitle="Schedule a pick-up with our partner and sell your scrap"
-                onPress={() => router.push("/sell-scrap")}
+                onPress={() => router.push("/select-material")}
             />
 
         </SafeAreaView>

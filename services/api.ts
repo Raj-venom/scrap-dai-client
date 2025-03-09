@@ -62,7 +62,7 @@ API.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
-
+        // console.log(error);
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true; // Prevent infinite loop
 
@@ -75,6 +75,8 @@ API.interceptors.response.use(
             } else {
                 await removeTokens();
             }
+        } else{
+            console.log("else part");
         }
 
         return Promise.reject(error);
