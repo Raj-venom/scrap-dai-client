@@ -61,9 +61,9 @@ export default function AppLayout() {
   const getCurrentStep = () => {
     if (pathname === '/select-material') return 1;
     if (pathname === '/select-category') return 2;
-    if (pathname === '/estimate-price') return 3;
-    if (pathname === '/date-location') return 4;
-    if (pathname === '/payment-option') return 5;
+    if (pathname === '/date-location') return 3;
+    if (pathname === '/upload-scrapImages') return 4;
+    if (pathname === '/confirm') return 5;
     return 1;
   };
 

@@ -5,7 +5,7 @@ import { getRole } from "@/services/token/tokenService";
 import userAuthService from "@/services/user/auth";
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
 export default function Index() {
@@ -16,27 +16,40 @@ export default function Index() {
 
 
   const currentUser = async () => {
-    const role = await getRole();
+    setLoading(true)
+    try {
+      const role = await getRole();
 
-    if (role === USER_ROLE.USER) {
-      const response = await userAuthService.getCurrentUser()
+      if (role === USER_ROLE.USER) {
+        const response = await userAuthService.getCurrentUser()
 
-      if (response.success) {
-        dispatch(login({ userData: response.data }))
+        if (response.success) {
+          dispatch(login({ userData: response.data }))
+        } else {
+          Alert.alert('Error', response.message)
+          dispatch(logout())
+        }
+
+      } else if (role === USER_ROLE.COLLECTOR) {
+        const response = await collectorAuthService.getCurrentUser()
+
+        if (response.success) {
+          dispatch(login({ userData: response.data }))
+        } else {
+          Alert.alert('Error', response.message)
+          dispatch(logout())
+        }
       } else {
+        console.log('Role not found');
         dispatch(logout())
       }
 
-    } else if (role === USER_ROLE.COLLECTOR) {
-      const response = await collectorAuthService.getCurrentUser()
+    } catch (error) {
+      dispatch(logout())
 
-      if (response.success) {
-        dispatch(login({ userData: response.data }))
-      } else {
-        dispatch(logout())
-      }
+    } finally {
+      setLoading(false)
     }
-
 
 
 
@@ -44,8 +57,10 @@ export default function Index() {
 
 
   useEffect(() => {
-    setLoading(true);
-    currentUser().finally(() => setLoading(false))
+    ; (async () => {
+      await currentUser()
+    }
+    )()
   }, [dispatch]);
 
 
