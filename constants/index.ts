@@ -101,3 +101,20 @@ export const USER_ROLE = {
   COLLECTOR: "collector",
   USER: "user"
 };
+
+
+
+export const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'PENDING':
+      return 'text-yellow-600';
+    case 'ACCEPTED':
+      return 'text-blue-600';
+    case 'CANCELLED':
+      return 'text-red-600';
+    case 'RECYCLED':
+      return 'text-green-600';
+    default:
+      return 'text-gray-600';
+  }
+};

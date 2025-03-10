@@ -9,9 +9,9 @@ export default function ProgressSteps({ currentStep }: ProgressStepsProps): JSX.
     const steps = [
         { id: 1, label: 'Select material' },
         { id: 2, label: 'Select category' },
-        { id: 3, label: 'Estimate Price' },
-        { id: 4, label: 'Date and Location' },
-        { id: 5, label: 'Payment Option' },
+        { id: 3, label: 'Date and Location' },
+        { id: 4, label: 'Scrap Images' },
+        { id: 5, label: 'Confirm Order' },
     ];
 
     return (

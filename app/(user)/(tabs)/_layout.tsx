@@ -96,7 +96,7 @@ const UserLayout = () => {
                     flexDirection: "row",
                     justifyContent: "center",
                     alignItems: "center",
-                    
+
                     paddingVertical: 10,
                     borderTopWidth: 1,
                     borderTopColor: "#eee",
@@ -121,7 +121,11 @@ const UserLayout = () => {
                 name="history"
                 options={{
                     title: "History",
-                    headerShown: false,
+                    headerShown: true,
+                    headerTitleAlign: "center",
+                    headerStyle: {
+                        height: 60,
+                    },
                     tabBarIcon: ({ focused }) => <TabIcon name="document-text-outline" label="History" focused={focused} />,
                 }}
             />
