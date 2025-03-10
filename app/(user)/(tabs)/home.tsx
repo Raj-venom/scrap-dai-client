@@ -12,7 +12,7 @@ export default function HomeScreen() {
         <SafeAreaView className="flex-1 bg-white p-4">
             <View className="flex-row justify-between items-center mb-5">
                 <View>
-                    <Text className="text-2xl font-bold">Hi Dhruv,</Text>
+                    <Text className="text-2xl font-bold">Hi Raj,</Text>
                     <Text className="text-gray-500">What do you want to sell?</Text>
                 </View>
                 <TouchableOpacity>

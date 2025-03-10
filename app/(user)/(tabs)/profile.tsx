@@ -164,7 +164,16 @@ export default function Profile(): JSX.Element {
           <MenuItem
             icon="star-outline"
             title="Rate Us"
-            onPress={() => Alert.alert("Rate Us", "This would open the app store rating page")}
+            // if ok is pressed, open play store page for rating of pubg app
+            onPress={() => Alert.alert("Rate Us", "This would open the app store rating page", [
+              {
+                text: "Cancel",
+                style: "cancel"
+              },
+              {
+                text: "OK", onPress: () => router.push('https://play.google.com/store/apps/details?id=com.pubg.imobile')
+              }
+            ])}
           />
         </View>
 
