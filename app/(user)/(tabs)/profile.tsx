@@ -39,7 +39,7 @@ export default function Profile(): JSX.Element {
     address: "123, New Baneshwor, Kathmandu, Nepal",
     joinDate: "May 2023",
     totalRecycled: "87.5 kg",
-    totalEarnings: "₹3,250"
+    totalEarnings: "रु3,250"
   };
 
   // Function to handle logout

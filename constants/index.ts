@@ -103,6 +103,14 @@ export const USER_ROLE = {
 };
 
 
+export const ORDER_STATUS = {
+  PENDING: "Pending",
+  ACCEPTED: "Accepted",
+  CANCELLED: "Cancelled",
+  RECYCLED: "Recycled",
+}
+
+
 
 export const getStatusColor = (status: string) => {
   switch (status) {

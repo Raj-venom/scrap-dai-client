@@ -23,24 +23,24 @@ const materialCategories: MaterialCategory[] = [
     id: 1,
     type: 'Metal',
     categories: [
-      { id: 101, name: 'Steel', price: '₹45/kg' },
-      { id: 102, name: 'Brass', price: '₹300/kg' },
-      { id: 103, name: 'Tin', price: '₹70/kg' },
-      { id: 104, name: 'Cans', price: '₹50/kg' },
-      { id: 105, name: 'Aluminum', price: '₹100/kg' },
-      { id: 106, name: 'Copper', price: '₹400/kg' },
+      { id: 101, name: 'Steel', price: 'रु45/kg' },
+      { id: 102, name: 'Brass', price: 'रु300/kg' },
+      { id: 103, name: 'Tin', price: 'रु70/kg' },
+      { id: 104, name: 'Cans', price: 'रु50/kg' },
+      { id: 105, name: 'Aluminum', price: 'रु100/kg' },
+      { id: 106, name: 'Copper', price: 'रु400/kg' },
     ]
   },
   {
     id: 3,
     type: 'Paper',
     categories: [
-      { id: 301, name: 'Copy', price: '₹15/kg' },
-      { id: 302, name: 'Books', price: '₹8/kg' },
-      { id: 303, name: 'Carton', price: '₹10/kg' },
-      { id: 304, name: 'Tetra Pack', price: '₹5/kg' },
-      { id: 305, name: 'Newspaper', price: '₹12/kg' },
-      { id: 306, name: 'Magazines', price: '₹7/kg' },
+      { id: 301, name: 'Copy', price: 'रु15/kg' },
+      { id: 302, name: 'Books', price: 'रु8/kg' },
+      { id: 303, name: 'Carton', price: 'रु10/kg' },
+      { id: 304, name: 'Tetra Pack', price: 'रु5/kg' },
+      { id: 305, name: 'Newspaper', price: 'रु12/kg' },
+      { id: 306, name: 'Magazines', price: 'रु7/kg' },
     ]
   },
 ];

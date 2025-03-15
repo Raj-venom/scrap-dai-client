@@ -3,9 +3,9 @@ import { login, logout } from "@/contexts/features/auth/authSlice";
 import collectorAuthService from "@/services/collector/collectorAuth";
 import { getRole } from "@/services/token/tokenService";
 import userAuthService from "@/services/user/auth";
-import { Redirect } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Text, View } from "react-native";
+import { Alert, Text, TouchableOpacity, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
 export default function Index() {
@@ -76,7 +76,15 @@ export default function Index() {
 
   if (!loading && authStatus) {
     return (
-      <Redirect href="/(user)" />
+     <View className="m-16 gap-5">
+       <TouchableOpacity onPress={() => router.push("/(user)/(tabs)/home")}>
+         <Text>Go to Home</Text>
+       </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => router.push("/(collector)/(tabs)/home")}>
+          <Text>Go to Collector Home</Text>
+        </TouchableOpacity>
+     </View>
     )
   }
 

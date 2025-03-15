@@ -17,12 +17,12 @@ export default function PaymentOptionScreen(): JSX.Element {
 
     // Sample summary data (in a real app, this would come from context or params)
     const summary = [
-        { item: 'Steel', weight: '3.5 kg', price: '₹135-₹175' },
-        { item: 'Carton', weight: '1.9 kg', price: '₹45-₹72' }
+        { item: 'Steel', weight: '3.5 kg', price: 'रु135-रु175' },
+        { item: 'Carton', weight: '1.9 kg', price: 'रु45-रु72' }
     ];
 
     // Calculate estimated total range
-    const totalEstimate = '₹180-₹247';
+    const totalEstimate = 'रु180-रु247';
 
     // Estimated pickup date (just for display)
     const estimatedPickupDate = "March 13, 2025";
