@@ -13,7 +13,7 @@ export default function CollectorOtherLayout() {
                 options={{
                     headerShown: true,
                     header: () => (
-                        <View className="pt-4 pb-3 px-4 flex-row items-center border-b border-gray-200">
+                        <View className="pt-4 pb-3 px-4 flex-row items-center bg-white">
                             <TouchableOpacity onPress={() => router.back()} className="mr-4">
                                 <Ionicons name="chevron-back" size={24} color="black" />
                             </TouchableOpacity>
@@ -23,6 +23,7 @@ export default function CollectorOtherLayout() {
                     )
                 }}
             />
+            <Stack.Screen name="order-navigation" />
         </Stack>
     );
 }
