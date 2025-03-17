@@ -165,6 +165,7 @@ const CollectorHomeScreen: React.FC = () => {
                     <Text className="font-bold text-gray-800 text-lg mb-2">Orders Scheduled for Today</Text>
                     {todaysOrders.map((order) => (
                         <ScheduledOrderCard
+                            key={order.id}
                             date={order.date}
                             material={order.material}
                             location={order.location}

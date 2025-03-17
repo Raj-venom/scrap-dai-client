@@ -1,6 +1,6 @@
 import { View, Text, ScrollView, Image, Alert, Switch } from 'react-native'
 import React, { useState } from 'react'
-import { icons, images } from '@/constants'
+import { icons, images, USER_ROLE } from '@/constants'
 import InputField from '@/components/InputField'
 import CustomButton from '@/components/CustomButton'
 import { Link, router } from 'expo-router'
@@ -9,8 +9,7 @@ import { setRole, setTokens } from '@/services/token/tokenService'
 import { useDispatch, useSelector } from "react-redux"
 import { login as authLogin } from '@/contexts/features/auth/authSlice'
 import ModeToggle from '@/components/ModeToggle'
-
-
+import collectorAuthService from '@/services/collector/collectorAuth'
 
 
 const SignIn = () => {
@@ -43,40 +42,52 @@ const SignIn = () => {
 
     try {
       setLoading(true);
+      let response: any = null;
+      if (userMode === USER_ROLE.USER) {
+        response = await userAuthService.login(form);
+      }
+      else if (userMode === USER_ROLE.COLLECTOR) {
+        response = await collectorAuthService.login(form);
 
-      const response = await userAuthService.login(form);
-      // console.log(response)
+      } else {
+        Alert.alert('Error', 'User mode not found')
+      }
 
       if (!response.success) {
         Alert.alert('Error', response.message)
         return
       }
 
-      // if (response.statusCode === 200) {
-      //   console.log("sucess", response)
-      //   if (response.data.user.role === 'user') {
-      //     Alert.alert('Success', 'user Login successful')
-      //   } else if (response.data.user.role === 'collector') {
-      //     Alert.alert('Success', 'collector Login successful')
-      //   } else {
-      //     Alert.alert('Error', 'Aunauthorized user role')
-      //   }
-      // } else {
-      //   Alert.alert('Error', response.message)
-      // }
-
       if (response.success) {
         console.log(response.data.refreshToken, "refreshToken from login")
         await setTokens(response.data.accessToken, response.data.refreshToken);
         await setRole(response.data.user.role);
 
-        const userDataResponse = await userAuthService.getCurrentUser();
+        let userDataResponse = null
+        if (userMode === USER_ROLE.USER) {
+          userDataResponse = await userAuthService.getCurrentUser();
+        }
+        else if (userMode === USER_ROLE.COLLECTOR) {
+          userDataResponse = await collectorAuthService.getCurrentUser();
+        } else {
+          Alert.alert('Error', 'User mode not found')
+        }
+
 
         if (userDataResponse.success) {
-
+          console.log(userDataResponse.data, "userDataResponse")
+          console.log(userDataResponse.data.role, "userDataResponse role")
           dispatch(authLogin({ userData: userDataResponse.data }))
-          // Alert.alert('Success', 'Login successful')
-          router.replace('/(user)')
+          if (userDataResponse.data.role === USER_ROLE.USER) {
+            router.replace('/(user)/(tabs)/home')
+
+          } else if (userDataResponse.data.role === USER_ROLE.COLLECTOR) {
+            router.replace('/(collector)/(tabs)/home')
+
+          } else {
+            Alert.alert('Error', 'Aunauthorized user role')
+          }
+
         } else {
           Alert.alert('Error', userDataResponse.message)
         }
