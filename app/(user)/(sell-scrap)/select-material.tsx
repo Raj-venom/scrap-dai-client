@@ -3,60 +3,59 @@ import { View, Text, ScrollView } from 'react-native';
 import ScrapCategory from '@/components/ScrapCategory';
 import NextButton from '@/components/NextButton';
 
-// Define typings for material data
 interface ScrapMaterial {
   id: number;
   type: string;
   description: string;
-  iconName: string;
+  image: string;
 }
 
-
-// Material categories data with Ionicons
+// Material categories data with image URLs instead of Ionicons
 const scrapMaterials: ScrapMaterial[] = [
   {
     id: 1,
     type: 'Metal',
     description: 'Copper, Brass, Iron, etc.',
-    iconName: 'hardware-chip-outline'
+    image: 'https://cdn-icons-png.flaticon.com/512/2666/2666505.png'
   },
   {
     id: 2,
     type: 'Plastic',
     description: 'Container, soft plastic, etc.',
-    iconName: 'water-outline'
+    image: 'https://cdn-icons-png.flaticon.com/512/3141/3141177.png'
   },
   {
     id: 3,
     type: 'Paper',
     description: 'Newspaper, Books, etc.',
-    iconName: 'newspaper-outline'
+    image: 'https://cdn-icons-png.flaticon.com/512/3596/3596091.png'
   },
   {
     id: 4,
     type: 'Glass',
     description: 'Bottles, Jars, etc.',
-    iconName: 'wine-outline'
+    image: 'https://cdn-icons-png.flaticon.com/512/3200/3200090.png'
   },
   {
     id: 5,
     type: 'E-Waste',
     description: 'Mobile phones, etc.',
-    iconName: 'phone-portrait-outline'
+    image: 'https://cdn-icons-png.flaticon.com/512/2499/2499911.png'
   },
   {
     id: 6,
     type: 'Rubber',
     description: 'Old tires and other products',
-    iconName: 'car-outline'
+    image: 'https://cdn-icons-png.flaticon.com/512/6421/6421322.png'
   },
   {
     id: 7,
     type: 'Textiles',
     description: 'Old clothes, Bedding, etc.',
-    iconName: 'shirt-outline'
+    image: 'https://cdn-icons-png.flaticon.com/512/3721/3721619.png'
   },
 ];
+
 
 export default function SellScrapScreen(): JSX.Element {
   const [selectedMaterials, setSelectedMaterials] = useState<number[]>([]);
@@ -92,7 +91,7 @@ export default function SellScrapScreen(): JSX.Element {
               id={material.id}
               type={material.type}
               description={material.description}
-              iconName={material.iconName}
+              image={material.image}
               isSelected={isSelected(material.id)}
               onToggleSelect={handleToggleSelect}
             />
