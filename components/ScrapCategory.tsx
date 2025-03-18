@@ -3,12 +3,12 @@ import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 
 interface ScrapCategoryProps {
-  id: number;
+  id: string;
   type: string;
   description: string;
   image: string; // Changed from iconName to image
   isSelected: boolean;
-  onToggleSelect: (id: number) => void;
+  onToggleSelect: (id: string) => void;
 }
 
 export default function ScrapCategory({

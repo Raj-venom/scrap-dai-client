@@ -1,67 +1,29 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import ScrapCategory from '@/components/ScrapCategory';
 import NextButton from '@/components/NextButton';
-
-interface ScrapMaterial {
-  id: number;
-  type: string;
-  description: string;
-  image: string;
-}
-
-// Material categories data with image URLs instead of Ionicons
-const scrapMaterials: ScrapMaterial[] = [
-  {
-    id: 1,
-    type: 'Metal',
-    description: 'Copper, Brass, Iron, etc.',
-    image: 'https://cdn-icons-png.flaticon.com/512/2666/2666505.png'
-  },
-  {
-    id: 2,
-    type: 'Plastic',
-    description: 'Container, soft plastic, etc.',
-    image: 'https://cdn-icons-png.flaticon.com/512/3141/3141177.png'
-  },
-  {
-    id: 3,
-    type: 'Paper',
-    description: 'Newspaper, Books, etc.',
-    image: 'https://cdn-icons-png.flaticon.com/512/3596/3596091.png'
-  },
-  {
-    id: 4,
-    type: 'Glass',
-    description: 'Bottles, Jars, etc.',
-    image: 'https://cdn-icons-png.flaticon.com/512/3200/3200090.png'
-  },
-  {
-    id: 5,
-    type: 'E-Waste',
-    description: 'Mobile phones, etc.',
-    image: 'https://cdn-icons-png.flaticon.com/512/2499/2499911.png'
-  },
-  {
-    id: 6,
-    type: 'Rubber',
-    description: 'Old tires and other products',
-    image: 'https://cdn-icons-png.flaticon.com/512/6421/6421322.png'
-  },
-  {
-    id: 7,
-    type: 'Textiles',
-    description: 'Old clothes, Bedding, etc.',
-    image: 'https://cdn-icons-png.flaticon.com/512/3721/3721619.png'
-  },
-];
-
+import categoryService from '@/services/category/categoryService';
+import { ScrapCategory as ScrapCategoryType } from '@/types/type';
 
 export default function SellScrapScreen(): JSX.Element {
-  const [selectedMaterials, setSelectedMaterials] = useState<number[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
+  const [scrapCategory, setScrapCategory] = useState<ScrapCategoryType[]>([]);
 
-  const handleToggleSelect = (id: number) => {
-    setSelectedMaterials(prevSelected => {
+  // Fetch Category from API
+  useEffect(() => {
+    ; (async () => {
+      try {
+        const response = await categoryService.getAllCategories();
+        setScrapCategory(response.data);
+
+      } catch (error) {
+        console.error('API :: fetchCategory :: error', error);
+      }
+    })();
+  }, []);
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedCategory(prevSelected => {
       // If already selected, remove it
       if (prevSelected.includes(id)) {
         return prevSelected.filter(materialId => materialId !== id);
@@ -74,8 +36,8 @@ export default function SellScrapScreen(): JSX.Element {
   };
 
   // Check if a material is selected
-  const isSelected = (id: number) => {
-    return selectedMaterials.includes(id);
+  const isSelected = (id: string) => {
+    return selectedCategory.includes(id);
   };
 
   return (
@@ -85,14 +47,14 @@ export default function SellScrapScreen(): JSX.Element {
         <Text className="text-lg font-JakartaBold mb-2">Select Scrap material</Text>
 
         <View className="flex-row flex-wrap w-full justify-between">
-          {scrapMaterials.map((material) => (
+          {scrapCategory.map((material) => (
             <ScrapCategory
-              key={material.id}
-              id={material.id}
-              type={material.type}
+              key={material._id}
+              id={material._id}
+              type={material.name}
               description={material.description}
               image={material.image}
-              isSelected={isSelected(material.id)}
+              isSelected={isSelected(material._id)}
               onToggleSelect={handleToggleSelect}
             />
           ))}
@@ -101,7 +63,7 @@ export default function SellScrapScreen(): JSX.Element {
 
       {/* Next button */}
       <View className="p-7 z-10">
-        <NextButton isFormComplete={selectedMaterials.length > 0} nextRoute="/select-category" />
+        <NextButton isFormComplete={selectedCategory.length > 0} nextRoute="/select-category" />
       </View>
 
     </View>

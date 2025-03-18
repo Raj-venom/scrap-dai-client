@@ -380,7 +380,7 @@ const OrderRequestScreen: React.FC = () => {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50 px-4">
+        <SafeAreaView className="flex-1 bg-gray-50 ">
 
             <FilterBar
                 activeFilter={activeFilter}

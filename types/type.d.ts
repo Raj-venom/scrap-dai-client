@@ -47,3 +47,21 @@ declare interface userRegisterProps {
     password: string;
     phone: string;
 }
+
+declare interface Scrap {
+    _id: string;
+    name: string;
+    description: string;
+    image: string;
+    pricePerKg: number;
+    category: string;
+}
+
+declare interface ScrapCategory {
+    _id: string;
+    name: string;
+    slug: string;
+    description: string;
+    image: string;
+    scraps: Scrap[];
+}
