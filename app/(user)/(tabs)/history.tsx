@@ -138,7 +138,9 @@ export default function HistoryScreen(): JSX.Element {
           <Text className={`font-medium mt-1 ${getStatusColor(item.status.toUpperCase())}`}>
             Status: {item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase()}
           </Text>
-          <Text className="text-gray-600 mt-1">{label}: ${amount}</Text>
+          <Text className="text-gray-600 mt-1">{label}: 
+            <Text className="font-bold"> रु</Text>
+            {amount}</Text>
         </TouchableOpacity>
 
         {item.isExpanded && (

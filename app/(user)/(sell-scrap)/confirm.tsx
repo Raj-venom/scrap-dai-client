@@ -5,8 +5,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import { ScrapCategory, Scrap } from '@/types/type';
 import orderService from '@/services/order/orderService';
-import * as FileSystem from 'expo-file-system';
-import { Platform } from 'react-native';
+
+
+interface SubCategoryWithWeight {
+    _id: string;
+    weight: string;
+}
 
 export default function PaymentOptionScreen(): JSX.Element {
     const router = useRouter();
@@ -16,11 +20,12 @@ export default function PaymentOptionScreen(): JSX.Element {
         state.order.selectedScrapCategoryWithSubCategory
     );
     const selectedSubCategory = useSelector((state: any) => state.order.selectedSubCategory);
+    const selectedSubCategoryWithWeights = useSelector((state: any) =>
+        state.order.selectedSubCategoryWithWeights
+    );
     const pickupDate = useSelector((state: any) => state.order.pickupDate);
     const pickupAddress = useSelector((state: any) => state.order.pickupAddress);
     const scrapImages = useSelector((state: any) => state.order.scrapImages);
-
-    console.log("pickupdate", pickupDate)
 
     // Selected payment method state
     const [selectedPayment, setSelectedPayment] = useState<string>('cash');
@@ -36,12 +41,18 @@ export default function PaymentOptionScreen(): JSX.Element {
     // Calculate total estimate range
     const [totalEstimate, setTotalEstimate] = useState<string>('');
 
-    // Process the selected scraps and prepare summary
+    // Process the selected scraps and prepare summary with the weights
     useEffect(() => {
-        if (selectedScrapCategoryWithSubCategory && selectedSubCategory) {
+        if (selectedScrapCategoryWithSubCategory && selectedSubCategoryWithWeights?.length > 0) {
             const summaryItems: { item: string; weight: string; price: string }[] = [];
             let minTotal = 0;
             let maxTotal = 0;
+
+            // Create a map of scrap ID to weight for quick lookup
+            const weightMap = new Map<string, string>();
+            selectedSubCategoryWithWeights.forEach((item: SubCategoryWithWeight) => {
+                weightMap.set(item._id, item.weight);
+            });
 
             selectedScrapCategoryWithSubCategory.forEach((category: ScrapCategory) => {
                 const selectedScrapsInCategory = category.scraps.filter((scrap: Scrap) =>
@@ -49,17 +60,20 @@ export default function PaymentOptionScreen(): JSX.Element {
                 );
 
                 selectedScrapsInCategory.forEach((scrap: Scrap) => {
-                    // Assume 1kg as default weight if not specified
-                    const weight = "1.0 kg";
+                    // Get weight from the map or use 1.0 kg as default if not found
+                    const weightStr = weightMap.get(scrap._id) || "1.0";
+                    // Convert weight string to number for calculations (remove 'kg' if present)
+                    const weight = parseFloat(weightStr.replace('kg', '').trim());
+                    const weightDisplay = `${weightStr}${!weightStr.includes('kg') ? ' kg' : ''}`;
 
                     // Calculate price range (±15% around the base price)
-                    const basePrice = scrap.pricePerKg;
+                    const basePrice = scrap.pricePerKg * weight;
                     const minPrice = Math.floor(basePrice * 0.85);
                     const maxPrice = Math.ceil(basePrice * 1.15);
 
                     summaryItems.push({
                         item: scrap.name,
-                        weight,
+                        weight: weightDisplay,
                         price: `रु${minPrice}-रु${maxPrice}`
                     });
 
@@ -71,7 +85,7 @@ export default function PaymentOptionScreen(): JSX.Element {
             setSummary(summaryItems);
             setTotalEstimate(`रु${minTotal}-रु${maxTotal}`);
         }
-    }, [selectedScrapCategoryWithSubCategory, selectedSubCategory]);
+    }, [selectedScrapCategoryWithSubCategory, selectedSubCategory, selectedSubCategoryWithWeights]);
 
     // Format pickup date for display
     const formattedPickupDate = pickupDate;
@@ -81,11 +95,23 @@ export default function PaymentOptionScreen(): JSX.Element {
         try {
             setIsLoading(true);
 
-            // Prepare order items for API
+            // Create a weight map for quick lookup
+            const weightMap = new Map<string, string>();
+            if (selectedSubCategoryWithWeights?.length > 0) {
+                selectedSubCategoryWithWeights.forEach((item: SubCategoryWithWeight) => {
+                    weightMap.set(item._id, item.weight);
+                });
+            }
+
+            // Prepare order items for API with proper weights
             const orderItems = selectedSubCategory.map((scrapId: string) => {
                 // Find the scrap in the categories
                 let scrap: Scrap | null = null;
-                let weight = 1.0; // Default weight
+
+                // Get weight from the map or use 1.0 as default if not found
+                const weightStr = weightMap.get(scrapId) || "1.0";
+                // Convert weight string to number for calculations (remove 'kg' if present)
+                const weight = parseFloat(weightStr.replace('kg', '').trim());
 
                 for (const category of selectedScrapCategoryWithSubCategory) {
                     const foundScrap = category.scraps.find((s: Scrap) => s._id === scrapId);
@@ -123,7 +149,7 @@ export default function PaymentOptionScreen(): JSX.Element {
                     const fileObj = {
                         uri: imageInfo.uri,
                         type: imageInfo.type,
-                        name: imageInfo.id + '.jpg',  // Generate a name based on the ID
+                        name: imageInfo.id + '.jpg',  
                     };
 
                     // @ts-ignore - FormData append expects a different type than TypeScript allows
@@ -131,7 +157,6 @@ export default function PaymentOptionScreen(): JSX.Element {
                 }
             }
 
-            // Send the order with FormData
             const response = await orderService.createOrderWithFormData(formData);
 
             if (response.success) {

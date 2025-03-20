@@ -13,6 +13,11 @@ interface ScrapImage {
     id: string;
 }
 
+interface SubCategoryWithWeight {
+    _id: string;  
+    weight: string;
+}
+
 interface OrderState {
     selectedScrapCategoryWithSubCategory: ScrapCategory[];
     selectedCategory: string[];
@@ -20,6 +25,7 @@ interface OrderState {
     pickupDate: string;
     pickupAddress: PickupAddress;
     scrapImages: ScrapImage[];
+    selectedSubCategoryWithWeights: SubCategoryWithWeight[];
 
 }
 
@@ -34,6 +40,7 @@ const initialState: OrderState = {
         longitude: null,
     },
     scrapImages: [],
+    selectedSubCategoryWithWeights: [],
 };
 
 
@@ -58,7 +65,10 @@ const orderSlice = createSlice({
         },
         setScrapImages: (state, action: PayloadAction<ScrapImage[]>) => {
             state.scrapImages = action.payload;
-        }
+        },
+        setSelectedSubCategoryWithWeights: (state, action: PayloadAction<SubCategoryWithWeight[]>) => {
+            state.selectedSubCategoryWithWeights = action.payload;
+        },
 
     },
 });
@@ -69,7 +79,8 @@ export const {
     setPickupDate,
     setPickupAddress,
     setSelectedScrapCategoryWithSubCategory,
-    setScrapImages
+    setScrapImages,
+    setSelectedSubCategoryWithWeights,
 } = orderSlice.actions;
 
 export default orderSlice.reducer;
