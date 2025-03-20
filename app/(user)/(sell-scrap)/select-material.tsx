@@ -4,10 +4,23 @@ import ScrapCategory from '@/components/ScrapCategory';
 import NextButton from '@/components/NextButton';
 import categoryService from '@/services/category/categoryService';
 import { ScrapCategory as ScrapCategoryType } from '@/types/type';
+import { useDispatch, useSelector } from 'react-redux';
+import { setSelectedCategory as setSelectedCategoryFromStore } from '@/contexts/features/userOrder/orderSlice';
+import { setSelectedScrapCategoryWithSubCategory } from '@/contexts/features/userOrder/orderSlice';
 
 export default function SellScrapScreen(): JSX.Element {
-  const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
+  const dispatch = useDispatch();
+  const selectedCategoryFromStore = useSelector((state: any) => state.order.selectedCategory);
+
+  const [selectedCategory, setSelectedCategory] = useState<string[]>(selectedCategoryFromStore);
   const [scrapCategory, setScrapCategory] = useState<ScrapCategoryType[]>([]);
+
+  const selectedScrapWithSubCategory = scrapCategory.filter((category) => selectedCategory.includes(category._id));
+
+  const handleDispatch = () => {
+    dispatch(setSelectedCategoryFromStore(selectedCategory));
+    dispatch(setSelectedScrapCategoryWithSubCategory(selectedScrapWithSubCategory));
+  }
 
   // Fetch Category from API
   useEffect(() => {
@@ -63,7 +76,12 @@ export default function SellScrapScreen(): JSX.Element {
 
       {/* Next button */}
       <View className="p-7 z-10">
-        <NextButton isFormComplete={selectedCategory.length > 0} nextRoute="/select-category" />
+        <NextButton
+          isFormComplete={selectedCategory.length > 0}
+          nextRoute="/select-category"
+          onPress={handleDispatch}
+
+        />
       </View>
 
     </View>

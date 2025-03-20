@@ -1,110 +1,94 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
 import NextButton from '@/components/NextButton';
+import { useSelector, useDispatch } from 'react-redux';
+import { setSelectedSubCategory } from '@/contexts/features/userOrder/orderSlice';
+import { Scrap, ScrapCategory } from '@/types/type';
 
-// Define type for category items
-interface CategoryItem {
-  id: number;
-  name: string;
-  price: string;
-}
-
-// Define type for material categories
-interface MaterialCategory {
-  id: number;
-  type: string;
-  categories: CategoryItem[];
-}
-
-// Material subcategories data
-const materialCategories: MaterialCategory[] = [
-  {
-    id: 1,
-    type: 'Metal',
-    categories: [
-      { id: 101, name: 'Steel', price: 'रु45/kg' },
-      { id: 102, name: 'Brass', price: 'रु300/kg' },
-      { id: 103, name: 'Tin', price: 'रु70/kg' },
-      { id: 104, name: 'Cans', price: 'रु50/kg' },
-      { id: 105, name: 'Aluminum', price: 'रु100/kg' },
-      { id: 106, name: 'Copper', price: 'रु400/kg' },
-    ]
-  },
-  {
-    id: 3,
-    type: 'Paper',
-    categories: [
-      { id: 301, name: 'Copy', price: 'रु15/kg' },
-      { id: 302, name: 'Books', price: 'रु8/kg' },
-      { id: 303, name: 'Carton', price: 'रु10/kg' },
-      { id: 304, name: 'Tetra Pack', price: 'रु5/kg' },
-      { id: 305, name: 'Newspaper', price: 'रु12/kg' },
-      { id: 306, name: 'Magazines', price: 'रु7/kg' },
-    ]
-  },
-];
 
 export default function SelectCategoryScreen(): JSX.Element {
   const router = useRouter();
+  const dispatch = useDispatch();
 
-  // TODO: Get selected material IDs from previous screen uSing router.query or context
-  const selectedMaterialIds = [1, 3]; // Metal and Paper
-
-  // Filter materials based on selected IDs
-  const selectedMaterials = materialCategories.filter(material =>
-    selectedMaterialIds.includes(material.id)
+  // Get all data from Redux store at the component root level
+  const selectedScrapCategoryWithSubCategory = useSelector((state: any) =>
+    state.order.selectedScrapCategoryWithSubCategory
   );
+  const storedSelectedSubCategory = useSelector((state: any) => state.order.selectedSubCategory);
 
-  // State for weights by material
-  const [weights, setWeights] = useState<Record<number, string>>({});
+  // State for tracking selected subcategories (scraps)
+  const [selectedScraps, setSelectedScraps] = useState<Record<string, boolean>>({});
 
-  // State for selected subcategories
-  const [selectedCategories, setSelectedCategories] = useState<Record<number, boolean>>({});
+  // State for weights by category
+  const [weights, setWeights] = useState<Record<string, string>>({});
 
-  // Function to toggle category selection
-  const toggleCategorySelection = (categoryId: number) => {
-    setSelectedCategories(prev => ({
+  // Initialize selected scraps from Redux if available
+  useEffect(() => {
+    if (storedSelectedSubCategory && storedSelectedSubCategory.length > 0) {
+      const initialSelectedScraps: Record<string, boolean> = {};
+      storedSelectedSubCategory.forEach((scrapId: string) => {
+        initialSelectedScraps[scrapId] = true;
+      });
+      setSelectedScraps(initialSelectedScraps);
+    }
+  }, [storedSelectedSubCategory]);
+
+  // Function to toggle scrap selection
+  const toggleScrapSelection = (scrapId: string) => {
+    setSelectedScraps(prev => ({
       ...prev,
-      [categoryId]: !prev[categoryId]
+      [scrapId]: !prev[scrapId]
     }));
   };
 
   // Function to handle weight input
-  const handleWeightChange = (materialId: number, value: string) => {
+  const handleWeightChange = (categoryId: string, value: string) => {
     setWeights(prev => ({
       ...prev,
-      [materialId]: value
+      [categoryId]: value
     }));
   };
 
-  // Check if any category is selected and has weight
+  // Check if any scrap is selected
   const isFormComplete = () => {
-    return Object.keys(selectedCategories).some(key => selectedCategories[parseInt(key)]);
+    return Object.keys(selectedScraps).some(key => selectedScraps[key]);
   };
 
-  // Render category item for FlatList
-  const renderCategoryItem = ({ item }: { item: CategoryItem }) => (
+  // Handle next button press
+  const handleNextPress = () => {
+    // Get all selected scrap IDs
+    const selectedScrapIds = Object.keys(selectedScraps).filter(
+      scrapId => selectedScraps[scrapId]
+    );
+
+    // Dispatch selected scraps to Redux store
+    dispatch(setSelectedSubCategory(selectedScrapIds));
+  };
+
+  // Render scrap item for FlatList
+  const renderScrapItem = ({ item }: { item: Scrap }) => (
     <TouchableOpacity
-      key={item.id}
-      className={`py-3 px-4 mr-3 mb-2 rounded-md border ${selectedCategories[item.id] ? 'bg-green-100 border-green-500' : 'border-gray-300'}`}
-      onPress={() => toggleCategorySelection(item.id)}
+      key={item._id}
+      className={`py-3 px-4 mr-3 mb-2 rounded-md border ${selectedScraps[item._id] ? 'bg-green-100 border-green-500' : 'border-gray-300'
+        }`}
+      onPress={() => toggleScrapSelection(item._id)}
       style={{ minWidth: 90 }}
     >
       <Text className="text-base font-medium text-center">{item.name}</Text>
-      <Text className="text-sm text-gray-500 text-center mt-1">{item.price}</Text>
+      <Text className="text-sm text-gray-500 text-center mt-1">रु{item.pricePerKg}/kg</Text>
     </TouchableOpacity>
   );
 
-  // Render material section
-  const renderMaterialSection = (material: MaterialCategory) => (
-    <View key={material.id} className="mb-8">
-      <Text className="text-lg font-bold mb-3">{material.type} Categories</Text>
+  // Render category section
+  const renderCategorySection = (category: ScrapCategory) => (
+    <View key={category._id} className="mb-8">
+      <Text className="text-lg font-bold mb-3">{category.name} Categories</Text>
 
       <FlatList
-        data={material.categories}
-        renderItem={renderCategoryItem}
-        keyExtractor={item => item.id.toString()}
+        data={category.scraps}
+        renderItem={renderScrapItem}
+        keyExtractor={item => item._id}
         horizontal
         showsHorizontalScrollIndicator={false}
         className="mb-3"
@@ -116,8 +100,8 @@ export default function SelectCategoryScreen(): JSX.Element {
           className="border border-gray-300 rounded-md px-3 py-2 w-16 mr-2"
           keyboardType="numeric"
           placeholder="0.0"
-          value={weights[material.id] || ''}
-          onChangeText={(value) => handleWeightChange(material.id, value)}
+          value={weights[category._id] || ''}
+          onChangeText={(value) => handleWeightChange(category._id, value)}
         />
         <Text className="text-sm text-gray-500">kg</Text>
       </View>
@@ -127,7 +111,7 @@ export default function SelectCategoryScreen(): JSX.Element {
   return (
     <View className="flex-1 bg-white">
       <ScrollView className="flex-1 px-4 py-4">
-        {selectedMaterials.map(renderMaterialSection)}
+        {selectedScrapCategoryWithSubCategory.map(renderCategorySection)}
       </ScrollView>
 
       {/* Next button */}
@@ -135,6 +119,7 @@ export default function SelectCategoryScreen(): JSX.Element {
         <NextButton
           isFormComplete={isFormComplete()}
           nextRoute="/date-location"
+          onPress={handleNextPress}
         />
       </View>
     </View>
