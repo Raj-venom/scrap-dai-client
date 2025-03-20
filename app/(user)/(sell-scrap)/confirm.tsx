@@ -1,10 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Modal, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSelector } from 'react-redux';
+import { ScrapCategory, Scrap } from '@/types/type';
+import orderService from '@/services/order/orderService';
+import * as FileSystem from 'expo-file-system';
+import { Platform } from 'react-native';
 
 export default function PaymentOptionScreen(): JSX.Element {
     const router = useRouter();
+
+    // Get all data from Redux store
+    const selectedScrapCategoryWithSubCategory = useSelector((state: any) =>
+        state.order.selectedScrapCategoryWithSubCategory
+    );
+    const selectedSubCategory = useSelector((state: any) => state.order.selectedSubCategory);
+    const pickupDate = useSelector((state: any) => state.order.pickupDate);
+    const pickupAddress = useSelector((state: any) => state.order.pickupAddress);
+    const scrapImages = useSelector((state: any) => state.order.scrapImages);
+
+    console.log("pickupdate", pickupDate)
 
     // Selected payment method state
     const [selectedPayment, setSelectedPayment] = useState<string>('cash');
@@ -15,35 +31,122 @@ export default function PaymentOptionScreen(): JSX.Element {
     // Order success state
     const [orderSuccess, setOrderSuccess] = useState<boolean>(false);
 
-    // Sample summary data (in a real app, this would come from context or params)
-    const summary = [
-        { item: 'Steel', weight: '3.5 kg', price: 'रु135-रु175' },
-        { item: 'Carton', weight: '1.9 kg', price: 'रु45-रु72' }
-    ];
+    // Prepare summary data from redux state
+    const [summary, setSummary] = useState<{ item: string; weight: string; price: string }[]>([]);
+    // Calculate total estimate range
+    const [totalEstimate, setTotalEstimate] = useState<string>('');
 
-    // Calculate estimated total range
-    const totalEstimate = 'रु180-रु247';
+    // Process the selected scraps and prepare summary
+    useEffect(() => {
+        if (selectedScrapCategoryWithSubCategory && selectedSubCategory) {
+            const summaryItems: { item: string; weight: string; price: string }[] = [];
+            let minTotal = 0;
+            let maxTotal = 0;
 
-    // Estimated pickup date (just for display)
-    const estimatedPickupDate = "March 13, 2025";
+            selectedScrapCategoryWithSubCategory.forEach((category: ScrapCategory) => {
+                const selectedScrapsInCategory = category.scraps.filter((scrap: Scrap) =>
+                    selectedSubCategory.includes(scrap._id)
+                );
+
+                selectedScrapsInCategory.forEach((scrap: Scrap) => {
+                    // Assume 1kg as default weight if not specified
+                    const weight = "1.0 kg";
+
+                    // Calculate price range (±15% around the base price)
+                    const basePrice = scrap.pricePerKg;
+                    const minPrice = Math.floor(basePrice * 0.85);
+                    const maxPrice = Math.ceil(basePrice * 1.15);
+
+                    summaryItems.push({
+                        item: scrap.name,
+                        weight,
+                        price: `रु${minPrice}-रु${maxPrice}`
+                    });
+
+                    minTotal += minPrice;
+                    maxTotal += maxPrice;
+                });
+            });
+
+            setSummary(summaryItems);
+            setTotalEstimate(`रु${minTotal}-रु${maxTotal}`);
+        }
+    }, [selectedScrapCategoryWithSubCategory, selectedSubCategory]);
+
+    // Format pickup date for display
+    const formattedPickupDate = pickupDate;
 
     // Function to handle order confirmation
-    const handleConfirmOrder = () => {
-        setIsLoading(true);
+    const handleConfirmOrder = async () => {
+        try {
+            setIsLoading(true);
 
-        // Simulate API call
-        setTimeout(() => {
-            // Simulate 90% success rate
-            const success = Math.random() < 0.9;
+            // Prepare order items for API
+            const orderItems = selectedSubCategory.map((scrapId: string) => {
+                // Find the scrap in the categories
+                let scrap: Scrap | null = null;
+                let weight = 1.0; // Default weight
 
-            if (success) {
+                for (const category of selectedScrapCategoryWithSubCategory) {
+                    const foundScrap = category.scraps.find((s: Scrap) => s._id === scrapId);
+                    if (foundScrap) {
+                        scrap = foundScrap;
+                        break;
+                    }
+                }
+
+                if (!scrap) return null;
+
+                return {
+                    scrap: scrapId,
+                    weight: weight,
+                    amount: scrap.pricePerKg * weight
+                };
+            }).filter((item: any) => item !== null);
+
+            // Calculate estimated amount
+            const estimatedAmount = orderItems.reduce((sum: number, item: any) => sum + item.amount, 0);
+
+            // Create FormData for multipart/form-data request
+            const formData = new FormData();
+            formData.append('pickUpDate', pickupDate);
+            formData.append('estimatedAmount', estimatedAmount.toString());
+            formData.append('orderItems', JSON.stringify(orderItems));
+            formData.append('pickupAddress', JSON.stringify(pickupAddress));
+
+            // Process and append images
+            if (scrapImages && scrapImages.length > 0) {
+                for (let i = 0; i < scrapImages.length; i++) {
+                    const imageInfo = scrapImages[i];
+
+                    // Create file object from URI
+                    const fileObj = {
+                        uri: imageInfo.uri,
+                        type: imageInfo.type,
+                        name: imageInfo.id + '.jpg',  // Generate a name based on the ID
+                    };
+
+                    // @ts-ignore - FormData append expects a different type than TypeScript allows
+                    formData.append('scrapImages', fileObj);
+                }
+            }
+
+            // Send the order with FormData
+            const response = await orderService.createOrderWithFormData(formData);
+
+            if (response.success) {
                 setOrderSuccess(true);
                 setModalVisible(true);
             } else {
-                setIsLoading(false);
-                Alert.alert("Order Failed", "Failed to place order. Please try again.");
+                Alert.alert("Order Failed", response.message || "Failed to place order. Please try again.");
             }
-        }, 1500);
+
+        } catch (error) {
+            console.error('API :: createOrder :: error', error);
+            Alert.alert("Order Failed", "Failed to place order. Please try again.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     // Function to close modal and navigate
@@ -96,6 +199,29 @@ export default function PaymentOptionScreen(): JSX.Element {
                         <Text className="text-base font-bold">{totalEstimate}</Text>
                     </View>
                 </View>
+
+                {/* Pickup Location */}
+                <View className="mt-6">
+                    <Text className="text-lg font-bold mb-3">Pickup Details</Text>
+                    <View className="p-3 border border-gray-200 rounded-lg">
+                        <View className="flex-row items-start mb-2">
+                            <Ionicons name="location-outline" size={18} color="gray" className="mt-1" />
+                            <Text className="text-base ml-2 flex-1">{pickupAddress?.formattedAddress || "Address not specified"}</Text>
+                        </View>
+                        <View className="flex-row items-center">
+                            <Ionicons name="calendar-outline" size={18} color="gray" />
+                            <Text className="text-base ml-2">{formattedPickupDate}</Text>
+                        </View>
+                    </View>
+                </View>
+
+                {/* Image Preview (Optional) */}
+                {scrapImages && scrapImages.length > 0 && (
+                    <View className="mt-6">
+                        <Text className="text-lg font-bold mb-3">Images ({scrapImages.length})</Text>
+                        <Text className="text-sm text-gray-500 mb-2">Images will be uploaded when you confirm order</Text>
+                    </View>
+                )}
             </ScrollView>
 
             {/* Confirm Order Button */}
@@ -132,12 +258,17 @@ export default function PaymentOptionScreen(): JSX.Element {
                         <View className="w-full mb-4">
                             <View className="flex-row justify-between py-2 border-b border-gray-200">
                                 <Text className="text-gray-500">Estimated Pickup Date</Text>
-                                <Text className="font-medium">{estimatedPickupDate}</Text>
+                                <Text className="font-medium">{formattedPickupDate}</Text>
                             </View>
 
                             <View className="flex-row justify-between py-2 border-b border-gray-200">
                                 <Text className="text-gray-500">Payment Method</Text>
                                 <Text className="font-medium">Cash on Delivery</Text>
+                            </View>
+
+                            <View className="flex-row justify-between py-2 border-b border-gray-200">
+                                <Text className="text-gray-500">Estimated Amount</Text>
+                                <Text className="font-medium">{totalEstimate}</Text>
                             </View>
                         </View>
 

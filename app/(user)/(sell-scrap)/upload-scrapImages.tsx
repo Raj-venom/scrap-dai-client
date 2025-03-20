@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import NextButton from '@/components/NextButton';
 import * as ImagePicker from 'expo-image-picker';
+import { useDispatch, useSelector } from 'react-redux';
+import { setScrapImages } from '@/contexts/features/userOrder/orderSlice';
+
 
 // Define type for image item
 interface ScrapImage {
@@ -13,12 +15,25 @@ interface ScrapImage {
 }
 
 export default function UploadScrapImagesScreen(): JSX.Element {
-    const router = useRouter();
-    const [images, setImages] = useState<ScrapImage[]>([]);
+    const dispatch = useDispatch();
+
+    // Get images from Redux store if available
+    const storedImages = useSelector((state: any) => state.order.scrapImages || []);
+
+    const [images, setImages] = useState<ScrapImage[]>(storedImages);
     const [isUploading, setIsUploading] = useState<boolean>(false);
 
     // Maximum number of images allowed
     const MAX_IMAGES = 4;
+
+    // Update Redux store when images change
+    useEffect(() => {
+        // Only update Redux if the images state has been initialized 
+        // and is different from the stored value
+        if (images !== storedImages) {
+            dispatch(setScrapImages(images));
+        }
+    }, [images, dispatch]);
 
     // Pick images from device library
     const pickImages = async () => {
@@ -42,7 +57,7 @@ export default function UploadScrapImagesScreen(): JSX.Element {
             // Launch image picker
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
+                // allowsEditing: true,
                 aspect: [4, 3],
                 quality: 0.8,
                 allowsMultipleSelection: true,
@@ -127,6 +142,12 @@ export default function UploadScrapImagesScreen(): JSX.Element {
     // Check if form is complete (at least one image)
     const isFormComplete = () => {
         return images.length > 0;
+    };
+
+    // Handle next button press
+    const handleNextPress = () => {
+        // Make sure the latest images are saved in Redux before navigation
+        dispatch(setScrapImages(images));
     };
 
     return (
@@ -218,6 +239,7 @@ export default function UploadScrapImagesScreen(): JSX.Element {
                 <NextButton
                     isFormComplete={isFormComplete()}
                     nextRoute="/confirm"
+                    onPress={handleNextPress}
                 />
             </View>
         </View>

@@ -14,20 +14,42 @@ import NextButton from '@/components/NextButton';
 import { Calendar } from 'react-native-calendars';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
+import { useSelector, useDispatch } from 'react-redux';
+import { setPickupDate, setPickupAddress } from '@/contexts/features/userOrder/orderSlice';
 
 export default function DateLocationScreen(): JSX.Element {
+  const dispatch = useDispatch();
+
+  const selectedScrapCategoryWithSubCategory = useSelector((state: any) =>
+    state.order.selectedScrapCategoryWithSubCategory || []
+  );
+
+  const selectedCategory = useSelector((state: any) => state.order.selectedCategory || []);
+  const selectedSubCategory = useSelector((state: any) => state.order.selectedSubCategory || []);
+  const storedPickupDate = useSelector((state: any) => state.order.pickupDate || '');
+  const storedPickupAddress = useSelector((state: any) => state.order.pickupAddress || {
+    formattedAddress: '',
+    latitude: null,
+    longitude: null
+  });
+
+  console.log("selectedScrapCategoryWithSubCategory", selectedScrapCategoryWithSubCategory);
+  console.log("\n\nselectedCategory", selectedCategory);
+  console.log("selectedSubCategory", selectedSubCategory);
+
   const mapRef = useRef<MapView | null>(null);
 
-  const [pickupDate, setPickupDate] = useState<string>('');
+  const [pickupDate, setPickupDateState] = useState<string>(storedPickupDate);
+  const [pickupDateISO, setPickupDateISO] = useState<string>(storedPickupDate);
   const [showCalendar, setShowCalendar] = useState<boolean>(false);
   const [showMap, setShowMap] = useState<boolean>(false);
-  const [selectedAddress, setSelectedAddress] = useState<string>('');
+  const [selectedAddress, setSelectedAddressState] = useState<string>(storedPickupAddress.formattedAddress);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isLoadingLocation, setIsLoadingLocation] = useState<boolean>(false);
 
   const [selectedLocation, setSelectedLocation] = useState({
-    latitude: 27.6915,
-    longitude: 85.3420,
+    latitude: storedPickupAddress.latitude || 27.6915,
+    longitude: storedPickupAddress.longitude || 85.3420,
     latitudeDelta: 0.001,
     longitudeDelta: 0.001,
   });
@@ -43,10 +65,13 @@ export default function DateLocationScreen(): JSX.Element {
 
   // Handle date selection
   const handleDateSelect = (date: any) => {
-    // Convert from YYYY-MM-DD to DD/MM/YYYY for display
+    // Store the original YYYY-MM-DD format for backend
+    setPickupDateISO(date.dateString);
+
+    // Convert from YYYY-MM-DD to DD/MM/YYYY for display only
     const parts = date.dateString.split('-');
     const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-    setPickupDate(formattedDate);
+    setPickupDateState(formattedDate);
     setShowCalendar(false);
   };
 
@@ -55,8 +80,13 @@ export default function DateLocationScreen(): JSX.Element {
     if (!pickupDate) return {};
 
     // Convert from DD/MM/YYYY to YYYY-MM-DD
-    const parts = pickupDate.split('/');
-    const calendarFormat = `${parts[2]}-${parts[1]}-${parts[0]}`;
+    let calendarFormat = '';
+    if (pickupDateISO) {
+      calendarFormat = pickupDateISO;
+    } else if (pickupDate) {
+      const parts = pickupDate.split('/');
+      calendarFormat = `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
 
     return {
       [calendarFormat]: { selected: true, selectedColor: '#22c55e' }
@@ -130,18 +160,20 @@ export default function DateLocationScreen(): JSX.Element {
 
   // Handle map marker drag
   const handleMarkerDrag = async (e: any) => {
+    const newCoordinates = {
+      latitude: e.nativeEvent.coordinate.latitude,
+      longitude: e.nativeEvent.coordinate.longitude,
+    };
 
     setSelectedLocation({
       ...selectedLocation,
-      latitude: e.nativeEvent.coordinate.latitude,
-      longitude: e.nativeEvent.coordinate.longitude,
+      ...newCoordinates
     });
-
 
     try {
       setSearchQuery('Getting address...');
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${selectedLocation.latitude}&lon=${selectedLocation.longitude}&addressdetails=1`,
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${newCoordinates.latitude}&lon=${newCoordinates.longitude}&addressdetails=1`,
         { headers: { 'User-Agent': 'YourApp/1.0' } } // Nominatim requires a user agent
       );
       const data = await response.json();
@@ -152,13 +184,12 @@ export default function DateLocationScreen(): JSX.Element {
       } else {
         // Fallback if geocoding fails
         console.log(data);
-        setSearchQuery(`Latitude: ${selectedLocation.latitude.toFixed(6)}, Longitude: ${selectedLocation.longitude.toFixed(6)}`);
+        setSearchQuery(`Latitude: ${newCoordinates.latitude.toFixed(6)}, Longitude: ${newCoordinates.longitude.toFixed(6)}`);
       }
     } catch (error) {
       console.error('Error getting address:', error);
       // Fallback if request fails
-      setSelectedAddress(`Latitude: ${selectedLocation.latitude.toFixed(6)}, Longitude: ${selectedLocation.longitude.toFixed(6)}`);
-
+      setSearchQuery(`Latitude: ${newCoordinates.latitude.toFixed(6)}, Longitude: ${newCoordinates.longitude.toFixed(6)}`);
     }
   };
 
@@ -171,18 +202,22 @@ export default function DateLocationScreen(): JSX.Element {
       );
       const data = await response.json();
 
+      let formattedAddress = '';
       if (data && data.display_name) {
-        setSelectedAddress(data.display_name);
+        formattedAddress = data.display_name;
+        setSelectedAddressState(formattedAddress);
       } else {
         // Fallback if geocoding fails
         console.log(data);
-        setSelectedAddress(`Latitude: ${selectedLocation.latitude.toFixed(6)}, Longitude: ${selectedLocation.longitude.toFixed(6)}`);
+        formattedAddress = `Latitude: ${selectedLocation.latitude.toFixed(6)}, Longitude: ${selectedLocation.longitude.toFixed(6)}`;
+        setSelectedAddressState(formattedAddress);
       }
       setShowMap(false);
     } catch (error) {
       console.error('Error getting address:', error);
       // Fallback if request fails
-      setSelectedAddress(`Latitude: ${selectedLocation.latitude.toFixed(6)}, Longitude: ${selectedLocation.longitude.toFixed(6)}`);
+      const formattedAddress = `Latitude: ${selectedLocation.latitude.toFixed(6)}, Longitude: ${selectedLocation.longitude.toFixed(6)}`;
+      setSelectedAddressState(formattedAddress);
       setShowMap(false);
     }
   };
@@ -217,6 +252,27 @@ export default function DateLocationScreen(): JSX.Element {
     } catch (error) {
       console.error('Error searching location:', error);
     }
+  };
+
+  // Handle next button press - save to Redux store
+  const handleNextPress = () => {
+    // Dispatch ISO format date to Redux store for backend
+    dispatch(setPickupDate(pickupDateISO || convertDisplayDateToISO(pickupDate)));
+
+    // Dispatch pickup address to Redux store
+    dispatch(setPickupAddress({
+      formattedAddress: selectedAddress,
+      latitude: selectedLocation.latitude,
+      longitude: selectedLocation.longitude
+    }));
+  };
+
+  // Helper function to convert DD/MM/YYYY to YYYY-MM-DD if needed
+  const convertDisplayDateToISO = (displayDate: string): string => {
+    if (!displayDate) return '';
+    const parts = displayDate.split('/');
+    if (parts.length !== 3) return '';
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
   };
 
   return (
@@ -276,7 +332,7 @@ export default function DateLocationScreen(): JSX.Element {
         </View>
       </ScrollView>
 
-      {/* Calendar Modal - Using NativeWind */}
+      {/* Calendar Modal */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -386,13 +442,14 @@ export default function DateLocationScreen(): JSX.Element {
         <NextButton
           isFormComplete={isFormComplete()}
           nextRoute="/upload-scrapImages"
+          onPress={handleNextPress}
         />
       </View>
     </View>
   );
 }
 
-// StyleSheet for MapView and all map-related components as requested
+// StyleSheet for MapView and all map-related components 
 const styles = StyleSheet.create({
   mapModalContainer: {
     flex: 1,
