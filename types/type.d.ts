@@ -52,7 +52,7 @@ declare interface Scrap {
     _id: string;
     name: string;
     description: string;
-    image: string;
+    scrapImage: string;
     pricePerKg: number;
     category: string;
 }
@@ -64,4 +64,24 @@ declare interface ScrapCategory {
     description: string;
     image: string;
     scraps: Scrap[];
+}
+
+
+declare interface UserStats {
+    user: {
+        _id: string;
+        email: string;
+        fullName: string;
+        avatar: string;
+    };
+    totalCompletedOrders: number;
+    totalWeight: number;
+    totalEarnings: number;
+    environmentalImpact: {
+        energySaved: string;
+        waterSaved: string;
+        treesSaved: string;
+        oreSaved: string;
+        co2EmissionsReduced: string;
+    }
 }

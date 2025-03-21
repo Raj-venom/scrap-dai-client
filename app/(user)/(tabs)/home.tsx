@@ -1,18 +1,49 @@
-import React from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MenuButton from "@/components/MenuButton";
 import StatsCard from "@/components/StatsCard";
 import { router } from 'expo-router';
 import ImpactCard from '@/components/ImpactCard';
+import dashboardService from '@/services/dashboard/dashboardService';
+import { UserStats } from '@/types/type';
+
 
 
 export default function HomeScreen() {
+    const [userStats, setUserStats] = useState<UserStats | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        setLoading(true)
+        try {
+            ; (async () => {
+                const response = await dashboardService.getUserStats();
+                setUserStats(response.data);
+            }
+            )();
+
+        } catch (error: any) {
+            console.log('HomeScreen :: error', error)
+
+        } finally {
+            setLoading(false)
+        }
+    }, []);
+
+    if (loading) {
+        return (
+            <View className="flex-1 bg-white justify-center items-center">
+                <ActivityIndicator size="large" color="#0000ff" />
+            </View>
+        );
+    }
+
     return (
         <SafeAreaView className="flex-1 bg-white p-4">
             <View className="flex-row justify-between items-center mb-5">
                 <View>
-                    <Text className="text-2xl font-bold">Hi Raj,</Text>
+                    <Text className="text-2xl font-bold">Hi {userStats?.user.fullName || "User"}</Text>
                     <Text className="text-gray-500">What do you want to sell?</Text>
                 </View>
                 <TouchableOpacity>
@@ -21,24 +52,23 @@ export default function HomeScreen() {
             </View>
 
             <View className="flex-row gap-3 mb-5">
-                <StatsCard title="Quantity recycled" value="18 Kg" />
-                <StatsCard title="Orders Completed" value="2" />
+                <StatsCard title="Quantity recycled" value={`${userStats?.totalWeight || 0} kg`} />
+                <StatsCard title="Orders Completed" value={`${userStats?.totalCompletedOrders || 0}`} />
             </View>
 
             <View className="mb-5">
                 <ImpactCard
-                    energySaved="230 kWh"
-                    waterSaved="1,823 Ltrs"
-                    treesSaved="36 Trees"
-                    oreSaved="18 kg Ore"
+                    energySaved={userStats?.environmentalImpact?.energySaved || "0 kWh"}
+                    waterSaved={userStats?.environmentalImpact?.waterSaved || "0 Ltrs"}
+                    co2EmissionsReduced={userStats?.environmentalImpact?.co2EmissionsReduced || "0 kg CO2"}
+                    oreSaved={userStats?.environmentalImpact?.oreSaved || "0 kg Ore"}
                 />
             </View>
-
 
             <MenuButton
                 title="Rate Card"
                 subtitle="Know the real-time prices of different materials"
-                onPress={() => { }}
+                onPress={() => router.push("/rate-card")}
             />
 
             <MenuButton

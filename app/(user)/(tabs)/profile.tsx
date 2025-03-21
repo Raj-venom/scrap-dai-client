@@ -1,14 +1,37 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Switch, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Image, Switch, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useDispatch } from 'react-redux';
 import userAuthService from '@/services/user/auth';
 import { logout } from '@/contexts/features/auth/authSlice';
+import { UserStats } from '@/types/type';
+import dashboardService from '@/services/dashboard/dashboardService';
 
 export default function Profile(): JSX.Element {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const dispatch = useDispatch()
+
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true)
+    try {
+      ; (async () => {
+        const response = await dashboardService.getUserStats();
+        setUserStats(response.data);
+      }
+      )();
+
+    } catch (error: any) {
+      console.log('HomeScreen :: error', error)
+
+    } finally {
+      setLoading(false)
+    }
+  }, []);
+
 
   const logoutCall = async () => {
 
@@ -31,16 +54,6 @@ export default function Profile(): JSX.Element {
     }
   }
 
-  // Sample user data
-  const user = {
-    name: "Raj Singh",
-    email: "raj@example.com",
-    phone: "+977 123 456 7890",
-    address: "123, New Baneshwor, Kathmandu, Nepal",
-    joinDate: "May 2023",
-    totalRecycled: "87.5 kg",
-    totalEarnings: "रु3,250"
-  };
 
   // Function to handle logout
   const handleLogout = () => {
@@ -80,6 +93,14 @@ export default function Profile(): JSX.Element {
     </TouchableOpacity>
   );
 
+  if (loading) {
+    return (
+      <View className="flex-1 bg-white justify-center items-center">
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1 bg-white">
       <ScrollView>
@@ -89,12 +110,13 @@ export default function Profile(): JSX.Element {
 
           <View className="items-center">
             <View className="w-20 h-20 rounded-full bg-white items-center justify-center mb-3">
-              <Text className="text-3xl font-bold text-green-500">
-                {user.name.charAt(0)}
-              </Text>
+              <Image
+                source={{ uri: userStats?.user.avatar }}
+                style={{ width: 80, height: 80, borderRadius: 40 }}
+              />
             </View>
-            <Text className="text-xl font-bold text-white">{user.name}</Text>
-            <Text className="text-white opacity-80">{user.email}</Text>
+            <Text className="text-xl font-bold text-white">{userStats?.user.fullName}</Text>
+            <Text className="text-white opacity-80">{userStats?.user.email}</Text>
           </View>
         </View>
 
@@ -102,11 +124,11 @@ export default function Profile(): JSX.Element {
         <View className="flex-row px-4 py-4 bg-white shadow-sm">
           <View className="flex-1 items-center border-r border-gray-200">
             <Text className="text-gray-500">Total Recycled</Text>
-            <Text className="text-lg font-bold text-green-600">{user.totalRecycled}</Text>
+            <Text className="text-lg font-bold text-green-600">{userStats?.totalWeight} kg</Text>
           </View>
           <View className="flex-1 items-center">
             <Text className="text-gray-500">Total Earnings</Text>
-            <Text className="text-lg font-bold text-green-600">{user.totalEarnings}</Text>
+            <Text className="text-lg font-bold text-green-600">रु {userStats?.totalEarnings}</Text>
           </View>
         </View>
 

@@ -5,11 +5,11 @@ import { Ionicons } from '@expo/vector-icons';
 interface ImpactCardProps {
     energySaved: string;
     waterSaved: string;
-    treesSaved: string;
     oreSaved: string;
+    co2EmissionsReduced: string;
 }
 
-function ImpactCard({ energySaved, waterSaved, treesSaved, oreSaved }: ImpactCardProps) {
+function ImpactCard({ energySaved, waterSaved, co2EmissionsReduced, oreSaved }: ImpactCardProps) {
     return (
         <View className="bg-[#FFFFF7] p-4 rounded-lg mb-3 border border-[#D9D9D9]">
             <Text className="text-lg font-bold text-[#333333] mb-1">Impact on Environment</Text>
@@ -28,7 +28,7 @@ function ImpactCard({ energySaved, waterSaved, treesSaved, oreSaved }: ImpactCar
 
                 <View className="items-center">
                     <Ionicons name="leaf-outline" size={20} color="#333333" />
-                    <Text className="text-base text-[#333333] mt-1">{treesSaved}</Text>
+                    <Text className="text-base text-[#333333] mt-1"> reduced {co2EmissionsReduced}</Text>
                 </View>
 
                 <View className="items-center">
