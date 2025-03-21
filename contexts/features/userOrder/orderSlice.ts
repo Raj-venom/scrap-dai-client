@@ -14,7 +14,7 @@ interface ScrapImage {
 }
 
 interface SubCategoryWithWeight {
-    _id: string;  
+    _id: string;
     weight: string;
 }
 
@@ -69,6 +69,7 @@ const orderSlice = createSlice({
         setSelectedSubCategoryWithWeights: (state, action: PayloadAction<SubCategoryWithWeight[]>) => {
             state.selectedSubCategoryWithWeights = action.payload;
         },
+        resetOrderState: () => initialState,
 
     },
 });
@@ -81,6 +82,7 @@ export const {
     setSelectedScrapCategoryWithSubCategory,
     setScrapImages,
     setSelectedSubCategoryWithWeights,
+    resetOrderState,
 } = orderSlice.actions;
 
 export default orderSlice.reducer;

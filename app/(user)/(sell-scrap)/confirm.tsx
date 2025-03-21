@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Modal, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { ScrapCategory, Scrap } from '@/types/type';
 import orderService from '@/services/order/orderService';
+import { resetOrderState } from '@/contexts/features/userOrder/orderSlice';
 
 
 interface SubCategoryWithWeight {
@@ -14,6 +15,7 @@ interface SubCategoryWithWeight {
 
 export default function PaymentOptionScreen(): JSX.Element {
     const router = useRouter();
+    const dispatch = useDispatch();
 
     // Get all data from Redux store
     const selectedScrapCategoryWithSubCategory = useSelector((state: any) =>
@@ -149,7 +151,7 @@ export default function PaymentOptionScreen(): JSX.Element {
                     const fileObj = {
                         uri: imageInfo.uri,
                         type: imageInfo.type,
-                        name: imageInfo.id + '.jpg',  
+                        name: imageInfo.id + '.jpg',
                     };
 
                     // @ts-ignore - FormData append expects a different type than TypeScript allows
@@ -177,6 +179,7 @@ export default function PaymentOptionScreen(): JSX.Element {
     // Function to close modal and navigate
     const handleCloseModal = () => {
         setModalVisible(false);
+        dispatch(resetOrderState());
         router.replace("/(user)/(tabs)/home");
     };
 
