@@ -9,7 +9,6 @@ import { UserStats } from '@/types/type';
 import dashboardService from '@/services/dashboard/dashboardService';
 
 export default function Profile(): JSX.Element {
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const dispatch = useDispatch()
 
   const [userStats, setUserStats] = useState<UserStats | null>(null);
@@ -147,21 +146,6 @@ export default function Profile(): JSX.Element {
             icon="location-outline"
             title="My Addresses"
             // onPress={() => router.push('/addresses')}
-            onPress={() => console.log('Personal Information')}
-          />
-
-          <MenuItem
-            icon="notifications-outline"
-            title="Notifications"
-            showArrow={false}
-            rightComponent={
-              <Switch
-                value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
-                trackColor={{ false: "#d1d5db", true: "#86efac" }}
-                thumbColor={notificationsEnabled ? "#16a34a" : "#f4f4f5"}
-              />
-            }
             onPress={() => console.log('Personal Information')}
           />
         </View>

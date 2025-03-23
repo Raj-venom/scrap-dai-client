@@ -8,6 +8,7 @@ import {
   TextInput,
   StyleSheet,
   Alert,
+  FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import NextButton from '@/components/NextButton';
@@ -15,7 +16,7 @@ import { Calendar } from 'react-native-calendars';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useSelector, useDispatch } from 'react-redux';
-import { setPickupDate, setPickupAddress } from '@/contexts/features/userOrder/orderSlice';
+import { setPickupDate, setPickupAddress, setPickupTime } from '@/contexts/features/userOrder/orderSlice';
 
 export default function DateLocationScreen(): JSX.Element {
   const dispatch = useDispatch();
@@ -27,6 +28,7 @@ export default function DateLocationScreen(): JSX.Element {
   const selectedCategory = useSelector((state: any) => state.order.selectedCategory || []);
   const selectedSubCategory = useSelector((state: any) => state.order.selectedSubCategory || []);
   const storedPickupDate = useSelector((state: any) => state.order.pickupDate || '');
+  const storedPickupTime = useSelector((state: any) => state.order.pickupTime || '');
   const storedPickupAddress = useSelector((state: any) => state.order.pickupAddress || {
     formattedAddress: '',
     latitude: null,
@@ -41,11 +43,23 @@ export default function DateLocationScreen(): JSX.Element {
 
   const [pickupDate, setPickupDateState] = useState<string>(storedPickupDate);
   const [pickupDateISO, setPickupDateISO] = useState<string>(storedPickupDate);
+  const [pickupTime, setPickupTimeState] = useState<string>(storedPickupTime);
   const [showCalendar, setShowCalendar] = useState<boolean>(false);
+  const [showTimeDropdown, setShowTimeDropdown] = useState<boolean>(false);
   const [showMap, setShowMap] = useState<boolean>(false);
   const [selectedAddress, setSelectedAddressState] = useState<string>(storedPickupAddress.formattedAddress);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isLoadingLocation, setIsLoadingLocation] = useState<boolean>(false);
+
+  // Time slots
+  const timeSlots = [
+    "Select Time",
+    "7 AM - 9 AM",
+    "9 AM - 11 AM",
+    "11 AM - 1 PM",
+    "1 PM - 3 PM",
+    "3 PM - 5 PM"
+  ];
 
   const [selectedLocation, setSelectedLocation] = useState({
     latitude: storedPickupAddress.latitude || 27.6915,
@@ -60,7 +74,10 @@ export default function DateLocationScreen(): JSX.Element {
 
   // Check if form is complete
   const isFormComplete = () => {
-    return pickupDate.trim() !== '' && selectedAddress.trim() !== '';
+    return pickupDate.trim() !== '' &&
+      selectedAddress.trim() !== '' &&
+      pickupTime !== '' &&
+      pickupTime !== 'Select Time';
   };
 
   // Handle date selection
@@ -73,6 +90,12 @@ export default function DateLocationScreen(): JSX.Element {
     const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
     setPickupDateState(formattedDate);
     setShowCalendar(false);
+  };
+
+  // Handle time selection
+  const handleTimeSelect = (time: string) => {
+    setPickupTimeState(time);
+    setShowTimeDropdown(false);
   };
 
   // Format selected date for the calendar's markedDates prop
@@ -254,12 +277,11 @@ export default function DateLocationScreen(): JSX.Element {
     }
   };
 
-  // Handle next button press - save to Redux store
   const handleNextPress = () => {
-    // Dispatch ISO format date to Redux store for backend
     dispatch(setPickupDate(pickupDateISO || convertDisplayDateToISO(pickupDate)));
 
-    // Dispatch pickup address to Redux store
+    dispatch(setPickupTime(pickupTime));
+
     dispatch(setPickupAddress({
       formattedAddress: selectedAddress,
       latitude: selectedLocation.latitude,
@@ -289,6 +311,20 @@ export default function DateLocationScreen(): JSX.Element {
               {pickupDate || 'DD/MM/YYYY'}
             </Text>
             <Ionicons name="calendar-outline" size={20} color="gray" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Time Picker Section */}
+        <View className="mb-6">
+          <Text className="text-base font-medium mb-2">Pick-Up Time</Text>
+          <TouchableOpacity
+            className="border border-gray-300 rounded-md p-3 flex-row justify-between items-center"
+            onPress={() => setShowTimeDropdown(true)}
+          >
+            <Text className={pickupTime && pickupTime !== 'Select Time' ? "text-black" : "text-gray-400"}>
+              {pickupTime || 'Select Time'}
+            </Text>
+            <Ionicons name="time-outline" size={20} color="gray" />
           </TouchableOpacity>
         </View>
 
@@ -357,6 +393,40 @@ export default function DateLocationScreen(): JSX.Element {
                 selectedDayBackgroundColor: '#22c55e',
                 arrowColor: '#22c55e',
               }}
+            />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Time Dropdown Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showTimeDropdown}
+        onRequestClose={() => setShowTimeDropdown(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="w-11/12 max-w-md bg-white rounded-xl overflow-hidden shadow-lg">
+            <View className="flex-row justify-between items-center p-4 border-b border-gray-200">
+              <Text className="text-lg font-bold">Select Time</Text>
+              <TouchableOpacity onPress={() => setShowTimeDropdown(false)}>
+                <Ionicons name="close" size={24} color="black" />
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={timeSlots.slice(1)} // Skip "Select Time" as it's just a placeholder
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  className={`p-4 border-b border-gray-100 ${pickupTime === item ? 'bg-green-50' : ''}`}
+                  onPress={() => handleTimeSelect(item)}
+                >
+                  <Text className={`${pickupTime === item ? 'text-green-600 font-medium' : 'text-gray-800'}`}>
+                    {item}
+                  </Text>
+                </TouchableOpacity>
+              )}
             />
           </View>
         </View>

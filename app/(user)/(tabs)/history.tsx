@@ -138,7 +138,7 @@ export default function HistoryScreen(): JSX.Element {
           <Text className={`font-medium mt-1 ${getStatusColor(item.status.toUpperCase())}`}>
             Status: {item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase()}
           </Text>
-          <Text className="text-gray-600 mt-1">{label}: 
+          <Text className="text-gray-600 mt-1">{label}:
             <Text className="font-bold"> रु</Text>
             {amount}</Text>
         </TouchableOpacity>
@@ -198,6 +198,8 @@ export default function HistoryScreen(): JSX.Element {
         keyExtractor={item => item._id}
         contentContainerClassName="px-4 py-4"
       />
+
+      <View className="h-16" />
     </View>
   );
 }

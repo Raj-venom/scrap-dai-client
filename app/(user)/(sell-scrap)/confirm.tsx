@@ -28,6 +28,7 @@ export default function PaymentOptionScreen(): JSX.Element {
     const pickupDate = useSelector((state: any) => state.order.pickupDate);
     const pickupAddress = useSelector((state: any) => state.order.pickupAddress);
     const scrapImages = useSelector((state: any) => state.order.scrapImages);
+    const pickupTime = useSelector((state: any) => state.order.pickupTime);
 
     // Selected payment method state
     const [selectedPayment, setSelectedPayment] = useState<string>('cash');
@@ -138,6 +139,7 @@ export default function PaymentOptionScreen(): JSX.Element {
             // Create FormData for multipart/form-data request
             const formData = new FormData();
             formData.append('pickUpDate', pickupDate);
+            formData.append('pickUpTime', pickupTime);
             formData.append('estimatedAmount', estimatedAmount.toString());
             formData.append('orderItems', JSON.stringify(orderItems));
             formData.append('pickupAddress', JSON.stringify(pickupAddress));
@@ -236,9 +238,13 @@ export default function PaymentOptionScreen(): JSX.Element {
                             <Ionicons name="location-outline" size={18} color="gray" className="mt-1" />
                             <Text className="text-base ml-2 flex-1">{pickupAddress?.formattedAddress || "Address not specified"}</Text>
                         </View>
-                        <View className="flex-row items-center">
+                        <View className="flex-row items-center mb-1">
                             <Ionicons name="calendar-outline" size={18} color="gray" />
                             <Text className="text-base ml-2">{formattedPickupDate}</Text>
+                        </View>
+                        <View className="flex-row items-center">
+                            <Ionicons name="time-outline" size={18} color="gray" />
+                            <Text className="text-base ml-2">{pickupTime}</Text>
                         </View>
                     </View>
                 </View>
@@ -287,6 +293,11 @@ export default function PaymentOptionScreen(): JSX.Element {
                             <View className="flex-row justify-between py-2 border-b border-gray-200">
                                 <Text className="text-gray-500">Estimated Pickup Date</Text>
                                 <Text className="font-medium">{formattedPickupDate}</Text>
+                            </View>
+
+                            <View className="flex-row justify-between py-2 border-b border-gray-200">
+                                <Text className="text-gray-500">Estimated Pickup Time</Text>
+                                <Text className="font-medium">{pickupTime}</Text>
                             </View>
 
                             <View className="flex-row justify-between py-2 border-b border-gray-200">

@@ -26,6 +26,7 @@ interface OrderState {
     pickupAddress: PickupAddress;
     scrapImages: ScrapImage[];
     selectedSubCategoryWithWeights: SubCategoryWithWeight[];
+    pickupTime: string;
 
 }
 
@@ -41,6 +42,7 @@ const initialState: OrderState = {
     },
     scrapImages: [],
     selectedSubCategoryWithWeights: [],
+    pickupTime: '',
 };
 
 
@@ -70,6 +72,9 @@ const orderSlice = createSlice({
             state.selectedSubCategoryWithWeights = action.payload;
         },
         resetOrderState: () => initialState,
+        setPickupTime: (state, action: PayloadAction<string>) => {
+            state.pickupTime = action.payload;
+        }
 
     },
 });
@@ -83,6 +88,7 @@ export const {
     setScrapImages,
     setSelectedSubCategoryWithWeights,
     resetOrderState,
+    setPickupTime
 } = orderSlice.actions;
 
 export default orderSlice.reducer;
