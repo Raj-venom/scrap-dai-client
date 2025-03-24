@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, Image, ScrollView } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, Image, ScrollView, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getStatusColor } from '@/constants';
 import orderService from '@/services/order/orderService';
@@ -33,28 +33,35 @@ interface HistoryItem {
 export default function HistoryScreen(): JSX.Element {
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  const fetchMyOrders = async () => {
+    try {
+      const response = await orderService.getMyOrders();
+
+      if (response.success) {
+        const orders = response.data;
+        const historyItems: HistoryItem[] = orders.map((order: any) => ({
+          ...order,
+          isExpanded: false,
+        }));
+
+        setHistoryItems(historyItems);
+      }
+    } catch (error: any) {
+      console.log('API :: getMyOrders :: error', error.response?.data);
+    }
+  };
 
   useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
-        const response = await orderService.getMyOrders();
+    setLoading(true);
+    fetchMyOrders().finally(() => setLoading(false));
+  }, []);
 
-        if (response.success) {
-          const orders = response.data;
-          const historyItems: HistoryItem[] = orders.map((order: any) => ({
-            ...order,
-            isExpanded: false,
-          }));
-
-          setHistoryItems(historyItems);
-        }
-      } catch (error: any) {
-        console.log('API :: getMyOrders :: error', error.response?.data);
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchMyOrders();
+    setRefreshing(false);
   }, []);
 
   // Function to toggle expansion of an item
@@ -161,8 +168,6 @@ export default function HistoryScreen(): JSX.Element {
                       )}
                     </View>
                     <Text className="font-medium">
-                      {/* {timelineItem.date}: ({timelineItem.time}) */}
-                      {/* formate date to readable like march  */}
                       {formatDate(timelineItem.date)}: ({timelineItem.time})
                     </Text>
                     <Text className="text-gray-600 mt-1">{timelineItem.message}</Text>
@@ -199,6 +204,14 @@ export default function HistoryScreen(): JSX.Element {
         renderItem={renderItem}
         keyExtractor={item => item._id}
         contentContainerClassName="px-4 py-4"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#0000ff']} // Android
+            tintColor="#0000ff" // iOS
+          />
+        }
       />
 
       <View className="h-16" />
