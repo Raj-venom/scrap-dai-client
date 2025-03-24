@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Modal, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Modal, ActivityIndicator, Alert, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
@@ -29,6 +29,9 @@ export default function PaymentOptionScreen(): JSX.Element {
     const pickupAddress = useSelector((state: any) => state.order.pickupAddress);
     const scrapImages = useSelector((state: any) => state.order.scrapImages);
     const pickupTime = useSelector((state: any) => state.order.pickupTime);
+    const contactNumberFromStore = useSelector((state: any) => state.auth.userData?.phone || '');
+    const [contactNumber, setContactNumber] = useState<string>(contactNumberFromStore);
+
 
     // Selected payment method state
     const [selectedPayment, setSelectedPayment] = useState<string>('cash');
@@ -38,11 +41,38 @@ export default function PaymentOptionScreen(): JSX.Element {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     // Order success state
     const [orderSuccess, setOrderSuccess] = useState<boolean>(false);
+    // Contact number validation state
+    const [contactNumberError, setContactNumberError] = useState<string>('');
 
     // Prepare summary data from redux state
     const [summary, setSummary] = useState<{ item: string; weight: string; price: string }[]>([]);
     // Calculate total estimate range
     const [totalEstimate, setTotalEstimate] = useState<string>('');
+
+    // Handle contact number change
+    const handleContactNumberChange = (text: string) => {
+        // Basic validation - only allow digits
+        if (/^\d*$/.test(text)) {
+            setContactNumberError('');
+        }
+
+        setContactNumber(text);
+    };
+
+    // Validate contact number
+    const validateContactNumber = (): boolean => {
+        if (!contactNumber || contactNumber.trim() === '') {
+            setContactNumberError('Contact number is required');
+            return false;
+        }
+
+        if (contactNumber.length < 10) {
+            setContactNumberError('Contact number must be at least 10 digits');
+            return false;
+        }
+
+        return true;
+    };
 
     // Process the selected scraps and prepare summary with the weights
     useEffect(() => {
@@ -95,6 +125,11 @@ export default function PaymentOptionScreen(): JSX.Element {
 
     // Function to handle order confirmation
     const handleConfirmOrder = async () => {
+        // Validate contact number before proceeding
+        if (!validateContactNumber()) {
+            return;
+        }
+
         try {
             setIsLoading(true);
 
@@ -140,6 +175,7 @@ export default function PaymentOptionScreen(): JSX.Element {
             const formData = new FormData();
             formData.append('pickUpDate', pickupDate);
             formData.append('pickUpTime', pickupTime);
+            formData.append('contactNumber', contactNumber);
             formData.append('estimatedAmount', estimatedAmount.toString());
             formData.append('orderItems', JSON.stringify(orderItems));
             formData.append('pickupAddress', JSON.stringify(pickupAddress));
@@ -208,8 +244,29 @@ export default function PaymentOptionScreen(): JSX.Element {
                     </View>
                 </TouchableOpacity>
 
-                {/* Summary Section */}
+                {/* Contact Number Section */}
                 <View className="mt-6">
+                    <Text className="text-lg font-bold mb-3">Contact Information</Text>
+
+                    <View className="mb-4">
+                        <Text className="text-base mb-1">Contact Number*</Text>
+                        <View className={`border ${contactNumberError ? 'border-red-500' : 'border-gray-300'} rounded-lg px-3 py-2 flex-row items-center`}>
+                            <Ionicons name="call-outline" size={20} color="gray" />
+                            <TextInput
+                                className="flex-1 ml-2 text-base"
+                                placeholder="Enter your phone number"
+                                keyboardType="phone-pad"
+                                value={contactNumber}
+                                onChangeText={handleContactNumberChange}
+                                maxLength={12}
+                            />
+                        </View>
+                        {contactNumberError ? <Text className="text-red-500 text-sm mt-1">{contactNumberError}</Text> : null}
+                    </View>
+                </View>
+
+                {/* Summary Section */}
+                <View className="mt-3">
                     <Text className="text-lg font-bold mb-3">Summary</Text>
 
                     {summary.map((item, index) => (
@@ -251,7 +308,7 @@ export default function PaymentOptionScreen(): JSX.Element {
 
                 {/* Image Preview (Optional) */}
                 {scrapImages && scrapImages.length > 0 && (
-                    <View className="mt-6">
+                    <View className="mt-6 mb-7">
                         <Text className="text-lg font-bold mb-3">Images ({scrapImages.length})</Text>
                         <Text className="text-sm text-gray-500 mb-2">Images will be uploaded when you confirm order</Text>
                     </View>
@@ -301,6 +358,11 @@ export default function PaymentOptionScreen(): JSX.Element {
                             </View>
 
                             <View className="flex-row justify-between py-2 border-b border-gray-200">
+                                <Text className="text-gray-500">Contact Number</Text>
+                                <Text className="font-medium">{contactNumber}</Text>
+                            </View>
+
+                            <View className="flex-row justify-between py-2 border-b border-gray-200">
                                 <Text className="text-gray-500">Payment Method</Text>
                                 <Text className="font-medium">Cash on Delivery</Text>
                             </View>
@@ -320,6 +382,7 @@ export default function PaymentOptionScreen(): JSX.Element {
                     </View>
                 </View>
             </Modal>
+
         </View>
     );
 }

@@ -161,7 +161,9 @@ export default function HistoryScreen(): JSX.Element {
                       )}
                     </View>
                     <Text className="font-medium">
-                      {timelineItem.date}: ({timelineItem.time})
+                      {/* {timelineItem.date}: ({timelineItem.time}) */}
+                      {/* formate date to readable like march  */}
+                      {formatDate(timelineItem.date)}: ({timelineItem.time})
                     </Text>
                     <Text className="text-gray-600 mt-1">{timelineItem.message}</Text>
                   </View>
