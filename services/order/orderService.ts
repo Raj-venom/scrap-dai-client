@@ -42,13 +42,13 @@ class OrderService {
         }
     }
 
-    async getUnassignedOrders() {
+    async getNewOrderRequest() {
         try {
-            const response = await API.get(`${this.baseUrl}/unassigned-orders`);
+            const response = await API.get(`${this.baseUrl}/new-order-request`);
 
             return response.data;
         } catch (error: any) {
-            console.log('API :: getUnassignedOrders :: error', error.response?.data)
+            console.log('API :: getNewOrderRequest :: error', error.response?.data)
             return error.response?.data;
         }
     }
@@ -107,6 +107,51 @@ class OrderService {
             return error.response?.data;
         }
     }
+
+    async getNearbyOrders(latitude: number, longitude: number) {
+        try {
+            const response = await API.get(`${this.baseUrl}/nearby-orders?latitude=${latitude}&longitude=${longitude}`);
+
+            return response.data;
+        } catch (error: any) {
+            console.log('API :: getNearbyOrders :: error', error.response?.data)
+            return error.response?.data;
+        }
+    }
+
+    async getHighValueOrders() {
+        try {
+            const response = await API.get(`${this.baseUrl}/high-value-orders`);
+
+            return response.data;
+        } catch (error: any) {
+            console.log('API :: getHighValueOrders :: error', error.response?.data)
+            return error.response?.data;
+        }
+    }
+
+    async getAllPendingOrders() {
+        try {
+            const response = await API.get(`${this.baseUrl}/pending-orders`);
+
+            return response.data;
+        } catch (error: any) {
+            console.log('API :: getAllPendingOrders :: error', error.response?.data)
+            return error.response?.data;
+        }
+    }
+
+    async getOrderScheduledForToday() {
+        try {
+            const response = await API.get(`${this.baseUrl}/today-orders`);
+
+            return response.data;
+        } catch (error: any) {
+            console.log('API :: getOrderScheduledForToday :: error', error.response?.data)
+            return error.response?.data;
+        }
+    }
+
 
 }
 

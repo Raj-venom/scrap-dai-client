@@ -258,7 +258,7 @@ export default function PaymentOptionScreen(): JSX.Element {
                                 keyboardType="phone-pad"
                                 value={contactNumber}
                                 onChangeText={handleContactNumberChange}
-                                maxLength={12}
+                                maxLength={10}
                             />
                         </View>
                         {contactNumberError ? <Text className="text-red-500 text-sm mt-1">{contactNumberError}</Text> : null}

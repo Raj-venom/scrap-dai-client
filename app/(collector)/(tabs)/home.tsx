@@ -1,10 +1,11 @@
-import React from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, FlatList } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, FlatList, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import StatsCard from '@/components/StatsCard';
 import OrderRequestCard from '@/components/collector/OrderRequestCard';
 import ScheduledOrderCard from '@/components/collector/ScheduledOrderCard';
+import orderService from '@/services/order/orderService';
 
 // Type definitions
 type PriceUpdateCardProps = {
@@ -13,14 +14,34 @@ type PriceUpdateCardProps = {
     trend: 'up' | 'down';
 };
 
-
-
 type OrderRequestItem = {
-    id: string;
-    date: string;
-    material: string;
-    location: string;
-};
+    pickupAddress: {
+        formattedAddress: string;
+        latitude: number;
+        longitude: number;
+    };
+    _id: string;
+    user: string;
+    collector: null;
+    pickUpDate: string;
+    status: string;
+    estimatedAmount: number;
+    orderItem: {
+        scrap: {
+            _id: string;
+            name: string;
+        };
+        weight: number;
+        amount: number;
+        _id: string;
+    }[];
+    scrapImage: string[];
+    pickUpTime: string;
+    contactNumber: string;
+}
+
+// const todaysOrders: OrderRequestItem[] = [];
+
 
 // Component for Price Update Card
 const PriceUpdateCard: React.FC<PriceUpdateCardProps> = ({ material, price, trend }) => {
@@ -39,77 +60,90 @@ const PriceUpdateCard: React.FC<PriceUpdateCardProps> = ({ material, price, tren
     );
 };
 
-
 const CollectorHomeScreen: React.FC = () => {
-    // TODO: Fetch data from API
-    // Sample data for order requests
-    const orderRequests: OrderRequestItem[] = [
-        {
-            id: '1',
-            date: '18 March, 2024',
-            material: 'Material: 3-5 Kg Poly, 3-6 Kg Carton',
-            location: '203, Sector 1, Ambala City'
-        },
-        {
-            id: '2',
-            date: '19 March, 2024',
-            material: 'Material: 5-7 Kg Paper, 2-3 Kg Metal',
-            location: '45, Green Park, Ambala City'
-        },
-        {
-            id: '3',
-            date: '20 March, 2024',
-            material: 'Material: 8-10 Kg Glass, 4-6 Kg Plastic',
-            location: '128, Lake Road, Ambala City'
-        }
-    ];
+    const [orderRequests, setOrderRequests] = useState<OrderRequestItem[]>([]);
+    const [todaysOrders, setTodaysOrders] = useState<OrderRequestItem[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
 
-    const todaysOrders: OrderRequestItem[] = [
-        {
-            id: '1',
-            date: '15 March, 2024',
-            material: 'Material: 3-5 Kg Poly, 5-8 Kg Carton',
-            location: '30 Model Town, Ambala City'
-        },
-        {
-            id: '2',
-            date: '15 March, 2024',
-            material: 'Material: 3-5 Kg Tyre, 10-12 Kg Steel',
-            location: '17 Kantar Nagar, Model Town, Ambala City'
-        },
-        {
-            id: '3',
-            date: '15 March, 2024',
-            material: 'Material: 3-5 Kg Tyre, 10-12 Kg Steel',
-            location: '17 Kantar Nagar, Model Town, Ambala City'
-        },
-        {
-            id: '4',
-            date: '15 March, 2024',
-            material: 'Material: 3-5 Kg Tyre, 10-12 Kg Steel',
-            location: '17 Kantar Nagar, Model Town, Ambala City'
-        },
-        {
-            id: '5',
-            date: '15 March, 2024',
-            material: 'Material: 3-5 Kg Tyre, 10-12 Kg Steel',
-            location: '17 Kantar Nagar, Model Town, Ambala City'
+    const fetchNewOrderRequests = async () => {
+        try {
+            const response = await orderService.getNewOrderRequest();
+
+            if (response.success) {
+                console.log(response.data);
+                setOrderRequests(response.data);
+            }
+        } catch (error: any) {
+            console.log('API :: getNewOrderRequest :: error', error.response?.data);
         }
-    ];
+    };
+
+    const fetchOrderScheduledForToday = async () => {
+
+        try {
+            const response = await orderService.getOrderScheduledForToday();
+
+            if (response.success) {
+                console.log(response.data);
+                setTodaysOrders(response.data);
+            }
+
+        } catch (error: any) {
+            console.log('API :: getMyOrders :: error', error.response?.data)
+            return error.response?.data;
+        }
+    };
+
+    useEffect(() => {
+        setLoading(true);
+        ; (async () => {
+            await fetchNewOrderRequests();
+            await fetchOrderScheduledForToday();
+            setLoading(false);
+        })().finally(() => setLoading(false));
+    }, []);
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await fetchNewOrderRequests();
+        setRefreshing(false);
+    }, []);
+
+    // Format order item materials
+    const formatMaterials = (orderItems: Array<{ scrap: { name: string }, weight: number }>) => {
+        return `Material: ${orderItems.map(item => `${item.weight} Kg ${item.scrap.name}`).join(', ')}`;
+    };
+
+    // Format date
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+    };
 
     const renderOrderRequestItem = ({ item }: { item: OrderRequestItem }) => (
         <OrderRequestCard
-            date={item.date}
-            material={item.material}
-            location={item.location}
-            onAccept={() => console.log(`Order ${item.id} accepted`)}
-            onIgnore={() => console.log(`Order ${item.id} ignored`)}
+            date={formatDate(item.pickUpDate)}
+            material={formatMaterials(item.orderItem)}
+            location={item.pickupAddress.formattedAddress}
+            onAccept={() => console.log(`Order ${item._id} accepted`)}
+            onIgnore={() => console.log(`Order ${item._id} ignored`)}
         />
     );
 
     return (
         <SafeAreaView className="flex-1 bg-white">
-            <ScrollView className="flex-1 px-4 ">
+            <ScrollView
+                className="flex-1 px-4 "
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={['#0000ff']}
+                        tintColor="#0000ff"
+                    />
+                }
+            >
                 <View className="pt-4 pb-2 flex-row justify-between items-center">
                     <View>
                         <Text className="text-2xl font-bold text-gray-800">Hi John,</Text>
@@ -150,25 +184,29 @@ const CollectorHomeScreen: React.FC = () => {
                         </TouchableOpacity>
                     </View>
 
-                    <FlatList
-                        data={orderRequests}
-                        renderItem={renderOrderRequestItem}
-                        keyExtractor={item => item.id}
-                        horizontal={true}
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingRight: 16 }}
-                    />
+                    {orderRequests.length > 0 ? (
+                        <FlatList
+                            data={orderRequests}
+                            renderItem={renderOrderRequestItem}
+                            keyExtractor={item => item._id}
+                            horizontal={true}
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={{ paddingRight: 16 }}
+                        />
+                    ) : (
+                        <Text className="text-gray-500 text-center">No new order requests</Text>
+                    )}
                 </View>
 
-                {/* Orders Scheduled */}
+                {/* Orders Scheduled*/}
                 <View className="mb-4">
                     <Text className="font-bold text-gray-800 text-lg mb-2">Orders Scheduled for Today</Text>
                     {todaysOrders.map((order) => (
                         <ScheduledOrderCard
-                            key={order.id}
-                            date={order.date}
-                            material={order.material}
-                            location={order.location}
+                            key={order._id}
+                            date={order.pickUpDate}
+                            material={order.orderItem.map(item => `${item.weight} Kg ${item.scrap.name}`).join(', ')}
+                            location={order.pickupAddress.formattedAddress}
                             onPress={() => router.push("/order-navigation")}
                         />
                     ))}
@@ -176,7 +214,6 @@ const CollectorHomeScreen: React.FC = () => {
 
                 <View className="h-16" />
             </ScrollView>
-
         </SafeAreaView>
     );
 };
