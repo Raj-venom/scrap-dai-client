@@ -6,6 +6,7 @@ import StatsCard from '@/components/StatsCard';
 import OrderRequestCard from '@/components/collector/OrderRequestCard';
 import ScheduledOrderCard from '@/components/collector/ScheduledOrderCard';
 import orderService from '@/services/order/orderService';
+import { OrderRequest as OrderRequestItem } from '@/types/type';
 
 // Type definitions
 type PriceUpdateCardProps = {
@@ -13,34 +14,6 @@ type PriceUpdateCardProps = {
     price: string;
     trend: 'up' | 'down';
 };
-
-type OrderRequestItem = {
-    pickupAddress: {
-        formattedAddress: string;
-        latitude: number;
-        longitude: number;
-    };
-    _id: string;
-    user: string;
-    collector: null;
-    pickUpDate: string;
-    status: string;
-    estimatedAmount: number;
-    orderItem: {
-        scrap: {
-            _id: string;
-            name: string;
-        };
-        weight: number;
-        amount: number;
-        _id: string;
-    }[];
-    scrapImage: string[];
-    pickUpTime: string;
-    contactNumber: string;
-}
-
-// const todaysOrders: OrderRequestItem[] = [];
 
 
 // Component for Price Update Card
@@ -107,6 +80,7 @@ const CollectorHomeScreen: React.FC = () => {
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
         await fetchNewOrderRequests();
+        await fetchOrderScheduledForToday();
         setRefreshing(false);
     }, []);
 
@@ -207,7 +181,8 @@ const CollectorHomeScreen: React.FC = () => {
                             date={order.pickUpDate}
                             material={order.orderItem.map(item => `${item.weight} Kg ${item.scrap.name}`).join(', ')}
                             location={order.pickupAddress.formattedAddress}
-                            onPress={() => router.push("/order-navigation")}
+                            // onPress={() => router.push("/order-navigation")}
+                            onPress={() => router.push(`/(collector)/(other)/order-navigation/${order._id}`)}
                         />
                     ))}
                 </View>

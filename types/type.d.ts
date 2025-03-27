@@ -85,3 +85,71 @@ declare interface UserStats {
         co2EmissionsReduced: string;
     }
 }
+
+
+
+// declare interface OrderRequest {
+//     pickupAddress: {
+//         formattedAddress: string;
+//         latitude: number;
+//         longitude: number;
+//     };
+//     _id: string;
+//     user: string;
+//     collector: null;
+//     pickUpDate: string;
+//     status: string;
+//     estimatedAmount: number;
+//     orderItem: {
+//         scrap: {
+//             _id: string;
+//             name: string;
+//             pricePerKg: number;
+//         };
+//         weight: number;
+//         amount: number;
+//         _id: string;
+//     }[];
+//     scrapImage: string[];
+//     pickUpTime: string;
+//     contactNumber: string;
+// }
+
+declare interface OrderRequest {
+    pickupAddress: {
+        formattedAddress: string;
+        latitude: number;
+        longitude: number;
+    };
+    _id: string;
+    user: {
+        _id: string;
+        fullName: string;
+    };
+    collector: {
+        _id: string;
+        fullName: string;
+    } | null;
+    pickUpDate: string;
+    status: string;
+    estimatedAmount: number;
+    orderItem: {
+        scrap: {
+            _id: string;
+            name: string;
+            pricePerKg: number;
+        };
+        weight: number;
+        amount: number;
+        _id: string;
+    }[];
+    scrapImage: string[];
+    pickUpTime: string;
+    contactNumber: string;
+    timeline?: Array<{
+        date: string;
+        time: string;
+        message: string;
+        _id: string;
+    }>;
+}

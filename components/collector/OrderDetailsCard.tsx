@@ -59,7 +59,7 @@ const OrderDetailsCard: React.FC<{ orderDetails: OrderDetails; handleReachedDest
             </View>
 
             <View className="border-t border-gray-200 pt-3 mb-4">
-                <Text className="text-gray-700 mb-2">Estimated Order Value: रु{orderDetails.estimatedAmount}</Text>
+                <Text className="text-gray-700 mb-2">Estimated Order Value: रु{orderDetails.estimatedAmount.toFixed(2)}</Text>
                 <Text className="text-gray-700">Scrap Items:</Text>
                 <View className="flex-row flex-wrap mt-1">
                     {orderDetails.scrapItems.map((item) => (
