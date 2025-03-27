@@ -53,7 +53,7 @@ class OrderService {
         }
     }
 
-    async getOderById(orderId: string) {
+    async getOrderById(orderId: string) {
         try {
             const response = await API.get(`${this.baseUrl}/${orderId}`);
 
@@ -75,9 +75,10 @@ class OrderService {
         }
     }
 
-    async completeOrder(orderId: string, orderData: any) {
+    async completeOrder(orderId: string, orderItem: any) {
+        console.log('API :: completeOrder :: orderItem', orderItem)
         try {
-            const response = await API.patch(`${this.baseUrl}/${orderId}/complete`, orderData);
+            const response = await API.patch(`${this.baseUrl}/${orderId}/complete`, { orderItem });
 
             return response.data;
         } catch (error: any) {
