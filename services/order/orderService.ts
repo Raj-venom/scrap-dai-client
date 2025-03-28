@@ -112,7 +112,7 @@ class OrderService {
     async getNearbyOrders(latitude: number, longitude: number) {
         try {
             const response = await API.get(`${this.baseUrl}/nearby-orders?latitude=${latitude}&longitude=${longitude}`);
-
+            console.log(response.data)
             return response.data;
         } catch (error: any) {
             console.log('API :: getNearbyOrders :: error', error.response?.data)
@@ -123,6 +123,8 @@ class OrderService {
     async getHighValueOrders() {
         try {
             const response = await API.get(`${this.baseUrl}/high-value-orders`);
+
+            console.log((response.data))
 
             return response.data;
         } catch (error: any) {

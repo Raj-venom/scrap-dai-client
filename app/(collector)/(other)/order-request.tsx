@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     View,
     Text,
@@ -8,169 +8,97 @@ import {
     Image,
     ScrollView,
     Dimensions,
-    StyleSheet
+    Alert,
+    RefreshControl
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import * as Location from 'expo-location';
+import orderService from '@/services/order/orderService';
 
-// Types based on the provided schema
-type ScrapItem = {
-    _id: string;
-    name: string; // Assuming the Scrap model has a name field
-    pricePerKg: number; // Assuming the Scrap model has a price field
-};
-
-type OrderItem = {
-    scrap: ScrapItem;
-    weight: number | null;
-    amount: number | null;
-};
-
-type OrderRequest = {
-    _id: string;
-    user: {
-        _id: string;
-        name: string;
-        phoneNumber: string;
-        profileImage?: string;
-    };
+// Types
+export interface OrderRequest {
     pickupAddress: {
         formattedAddress: string;
         latitude: number;
         longitude: number;
     };
-    pickUpDate: Date;
+    _id: string;
+    user: {
+        _id: string;
+        fullName: string;
+        avatar?: string;
+    };
+    collector: {
+        _id: string;
+        fullName: string;
+    } | null;
+    pickUpDate: string;
     status: string;
     estimatedAmount: number;
-    totalAmount: number | null;
     orderItem: OrderItem[];
     scrapImage: string[];
-    createdAt: Date;
+    pickUpTime: string;
+    contactNumber: string;
+    timeline: {
+        date: string;
+        time: string;
+        message: string;
+        _id: string;
+    }[];
+    feedback: any | null;
+    createdAt: string;
+    updatedAt: string;
+    distance?: number; // Added for nearby orders
+}
+
+interface OrderItem {
+    scrap: {
+        _id: string;
+        name: string;
+        pricePerKg: number;
+    };
+    weight: number;
+    amount: number;
+    _id: string;
+}
+
+export interface OrderResponse {
+    success: boolean;
+    message: string;
+    data: OrderRequest[];
+    statusCode: number;
+}
+
+// FilterBar Component
+const FilterBar: React.FC<{
+    activeFilter: string;
+    onFilterChange: (filter: string) => void;
+}> = ({ activeFilter, onFilterChange }) => {
+    const filters = ["All", "Nearby", "High Value", "Recent"];
+
+    return (
+        <View className="flex-row mt-4 mb-4 px-4">
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {filters.map((filter) => (
+                    <TouchableOpacity
+                        key={filter}
+                        className={`px-4 py-2 mr-2 rounded-full ${activeFilter === filter ? 'bg-green-500' : 'bg-gray-100'
+                            }`}
+                        onPress={() => onFilterChange(filter)}
+                    >
+                        <Text className={`font-medium ${activeFilter === filter ? 'text-white' : 'text-gray-600'
+                            }`}>
+                            {filter}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
+        </View>
+    );
 };
 
-const ORDER_STATUS = {
-    PENDING: 'PENDING',
-    ACCEPTED: 'ACCEPTED',
-    REJECTED: 'REJECTED',
-    COMPLETED: 'COMPLETED',
-    CANCELLED: 'CANCELLED',
-    PICKED: 'PICKED'
-};
-
-// Sample data for demonstration
-const sampleOrderRequests: OrderRequest[] = [
-    {
-        _id: '1',
-        user: {
-            _id: 'u1',
-            name: 'Rahul Singh',
-            phoneNumber: '+919876543210',
-            profileImage: 'https://randomuser.me/api/portraits/men/32.jpg'
-        },
-        pickupAddress: {
-            formattedAddress: '203, Sector 1, Ambala City',
-            latitude: 30.3752,
-            longitude: 76.7821
-        },
-        pickUpDate: new Date('2024-03-18T14:00:00'),
-        status: ORDER_STATUS.PENDING,
-        estimatedAmount: 215,
-        totalAmount: null,
-        orderItem: [
-            {
-                scrap: { _id: 's1', name: 'Paper', pricePerKg: 12 },
-                weight: 5,
-                amount: 60
-            },
-            {
-                scrap: { _id: 's2', name: 'Plastic', pricePerKg: 15 },
-                weight: 3,
-                amount: 45
-            },
-            {
-                scrap: { _id: 's3', name: 'Carton', pricePerKg: 10 },
-                weight: 11,
-                amount: 110
-            }
-        ],
-        scrapImage: [
-            'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b',
-            'https://images.unsplash.com/photo-1605600659453-388a652585e0'
-        ],
-        createdAt: new Date('2024-03-15T09:30:00')
-    },
-    {
-        _id: '2',
-        user: {
-            _id: 'u2',
-            name: 'Priya Sharma',
-            phoneNumber: '+919876543211',
-            profileImage: 'https://randomuser.me/api/portraits/women/44.jpg'
-        },
-        pickupAddress: {
-            formattedAddress: '45, Green Park, Model Town, Ambala City',
-            latitude: 30.3692,
-            longitude: 76.7784
-        },
-        pickUpDate: new Date('2024-03-19T11:00:00'),
-        status: ORDER_STATUS.PENDING,
-        estimatedAmount: 378,
-        totalAmount: null,
-        orderItem: [
-            {
-                scrap: { _id: 's4', name: 'Metal', pricePerKg: 35 },
-                weight: 8,
-                amount: 280
-            },
-            {
-                scrap: { _id: 's2', name: 'Plastic', pricePerKg: 15 },
-                weight: 4,
-                amount: 60
-            },
-            {
-                scrap: { _id: 's3', name: 'Glass', pricePerKg: 8 },
-                weight: 4.75,
-                amount: 38
-            }
-        ],
-        scrapImage: [
-            'https://images.unsplash.com/photo-1533626904905-cc52fd99695e',
-            'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09',
-            'https://images.unsplash.com/photo-1611284446314-60a58ac0deb9'
-        ],
-        createdAt: new Date('2024-03-16T14:45:00')
-    },
-    {
-        _id: '3',
-        user: {
-            _id: 'u3',
-            name: 'Amit Kumar',
-            phoneNumber: '+919876543212'
-        },
-        pickupAddress: {
-            formattedAddress: '128, Lake Road, Sector 5, Ambala City',
-            latitude: 30.3601,
-            longitude: 76.7951
-        },
-        pickUpDate: new Date('2024-03-20T16:30:00'),
-        status: ORDER_STATUS.PENDING,
-        estimatedAmount: 455,
-        totalAmount: null,
-        orderItem: [
-            {
-                scrap: { _id: 's5', name: 'Electronics', pricePerKg: 65 },
-                weight: 7,
-                amount: 455
-            }
-        ],
-        scrapImage: [
-            'https://images.unsplash.com/photo-1610056494052-6a4f5fb780b9'
-        ],
-        createdAt: new Date('2024-03-17T10:20:00')
-    }
-];
-
-// Component for displaying scrap images
+// ScrapImageGallery Component
 const ScrapImageGallery: React.FC<{ images: string[] }> = ({ images }) => {
     const [activeIndex, setActiveIndex] = useState(0);
     const screenWidth = Dimensions.get('window').width - 40; // 40 for padding
@@ -214,21 +142,28 @@ const ScrapImageGallery: React.FC<{ images: string[] }> = ({ images }) => {
     );
 };
 
-// Component for displaying order item details
-const OrderItemDetails: React.FC<{ items: OrderItem[] }> = ({ items }) => {
+// OrderItemDetails Component
+const OrderItemDetails: React.FC<{ order: OrderRequest }> = ({ order }) => {
+    // const totalAmount = items.reduce((total, item) => total + (item.amount || 0), 0);
+    // const totalAmount = 9999;
+
+    const items = order.orderItem;
+
     return (
         <View className="mb-4">
             <Text className="font-bold text-base mb-2">Materials</Text>
-            {items.map((item, index) => (
+            {items?.map((item) => (
                 <View
-                    key={index}
+                    key={item._id}
                     className="flex-row justify-between items-center py-2 border-b border-gray-100"
                 >
                     <View className="flex-1">
                         <Text className="text-base">{item.scrap.name}</Text>
                     </View>
                     <View className="flex-row items-center flex-1 justify-end">
-                        <Text className="text-gray-600">{item.weight} kg × रु{item.scrap.pricePerKg}</Text>
+                        <Text className="text-gray-600">
+                            {item.weight} kg × रु{item.scrap.pricePerKg}
+                        </Text>
                     </View>
                     <View className="w-20 items-end">
                         <Text className="font-bold">रु{item.amount}</Text>
@@ -238,50 +173,62 @@ const OrderItemDetails: React.FC<{ items: OrderItem[] }> = ({ items }) => {
             <View className="flex-row justify-between items-center pt-3">
                 <Text className="font-bold text-base">Total Estimated</Text>
                 <Text className="font-bold text-lg text-green-600">
-                    रु{items.reduce((total, item) => total + (item.amount || 0), 0)}
+                    रु{order.estimatedAmount}
                 </Text>
             </View>
         </View>
     );
 };
 
-// Order Request Card Component
-const OrderRequestCard: React.FC<{ order: OrderRequest, onAccept: () => void, onReject: () => void }> = ({
-    order,
-    onAccept,
-    onReject
-}) => {
+// OrderRequestCard Component
+const OrderRequestCard: React.FC<{
+    order: OrderRequest;
+    onAccept: (orderId: string) => void;
+    onReject: (orderId: string) => void;
+}> = ({ order, onAccept, onReject }) => {
     const [expanded, setExpanded] = useState(false);
 
-    const toggleExpand = () => {
-        setExpanded(!expanded);
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleString('en-US', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
     };
 
     return (
         <View className="bg-white rounded-lg border border-gray-200 mb-4 overflow-hidden">
-            {/* Header */}
             <TouchableOpacity
                 className="flex-row justify-between items-center p-4 border-b border-gray-100"
-                onPress={toggleExpand}
+                onPress={() => setExpanded(!expanded)}
             >
                 <View className="flex-row items-center">
-                    {order.user.profileImage ? (
+                    {order.user.avatar ? (
                         <Image
-                            source={{ uri: order.user.profileImage }}
+                            source={{ uri: order.user.avatar }}
                             className="w-12 h-12 rounded-full mr-3"
                         />
                     ) : (
                         <View className="w-12 h-12 rounded-full bg-gray-300 items-center justify-center mr-3">
                             <Text className="text-xl font-bold text-gray-600">
-                                {order.user.name.charAt(0)}
+                                {order.user?.fullName.charAt(0)}
                             </Text>
                         </View>
                     )}
                     <View>
-                        <Text className="font-bold text-base">{order.user.name}</Text>
-                        <Text className="text-gray-500">
-                            {(new Date(order.pickUpDate), 'dd MMM, yyyy - h:mm a')}
-                        </Text>
+                        <Text className="font-bold text-base">{order.user.fullName}</Text>
+                        <View className="flex-row items-center">
+                            <Text className="text-gray-500">
+                                {formatDate(order.pickUpDate)}
+                            </Text>
+                            <Text className="text-gray-500 ml-2">
+                                {order.pickUpTime}
+                            </Text>
+                        </View>
                     </View>
                 </View>
                 <Ionicons
@@ -291,35 +238,36 @@ const OrderRequestCard: React.FC<{ order: OrderRequest, onAccept: () => void, on
                 />
             </TouchableOpacity>
 
-            {/* Expandable Content */}
             {expanded && (
                 <View className="p-4">
-                    {/* Pickup Address */}
                     <View className="mb-4">
                         <Text className="font-bold text-base mb-1">Pickup Address</Text>
                         <View className="flex-row items-start">
                             <Ionicons name="location" size={18} color="#4CAF50" className="mt-1" />
-                            <Text className="text-gray-600 ml-2 flex-1">{order.pickupAddress.formattedAddress}</Text>
+                            <Text className="text-gray-600 ml-2 flex-1">
+                                {order.pickupAddress.formattedAddress}
+                            </Text>
                         </View>
+                        {order.distance !== undefined && (
+                            <Text className="text-gray-500 mt-1">
+                                Distance: {order.distance.toFixed(2)} km
+                            </Text>
+                        )}
                     </View>
 
-                    {/* Scrap Images */}
                     <ScrapImageGallery images={order.scrapImage} />
+                    <OrderItemDetails order={order} />
 
-                    {/* Order Items */}
-                    <OrderItemDetails items={order.orderItem} />
-
-                    {/* Action Buttons */}
                     <View className="flex-row justify-between mt-2">
                         <TouchableOpacity
                             className="bg-white border border-gray-300 rounded-md py-3 px-6 flex-1 mr-3 items-center"
-                            onPress={onReject}
+                            onPress={() => onReject(order._id)}
                         >
                             <Text className="font-bold text-gray-700">Reject</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             className="bg-green-500 rounded-md py-3 px-6 flex-1 items-center"
-                            onPress={onAccept}
+                            onPress={() => onAccept(order._id)}
                         >
                             <Text className="font-bold text-white">Accept</Text>
                         </TouchableOpacity>
@@ -330,58 +278,108 @@ const OrderRequestCard: React.FC<{ order: OrderRequest, onAccept: () => void, on
     );
 };
 
-// Filter Bar Component
-const FilterBar: React.FC<{ activeFilter: string, onFilterChange: (filter: string) => void }> = ({
-    activeFilter,
-    onFilterChange
-}) => {
-    const filters = ["All", "Nearby", "High Value", "Recent"];
-
-    return (
-        <View className="flex-row mt-4 mb-4 px-4">
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {filters.map((filter) => (
-                    <TouchableOpacity
-                        key={filter}
-                        className={`px-4 py-2 mr-2 rounded-full ${activeFilter === filter ? 'bg-green-500' : 'bg-gray-100'
-                            }`}
-                        onPress={() => onFilterChange(filter)}
-                    >
-                        <Text
-                            className={`font-medium ${activeFilter === filter ? 'text-white' : 'text-gray-600'
-                                }`}
-                        >
-                            {filter}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
-            </ScrollView>
-        </View>
-    );
-};
-
-// Main Component
+// Main Screen Component
 const OrderRequestScreen: React.FC = () => {
     const [activeFilter, setActiveFilter] = useState("All");
-    const [orders, setOrders] = useState<OrderRequest[]>(sampleOrderRequests);
+    const [orders, setOrders] = useState<OrderRequest[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
-    const handleAccept = (orderId: string) => {
-        console.log(`Order ${orderId} accepted`);
-        // make an API call to update the order status
-        // and then update the local state
-        // TODO: Implement the API call
-        setOrders(orders.filter(order => order._id !== orderId));
+    const fetchOrders = useCallback(async (filter: string) => {
+        setIsLoading(true);
+        try {
+            let response;
+            switch (filter) {
+                case "Nearby":
+                    if (!userLocation) {
+                        const { status } = await Location.requestForegroundPermissionsAsync();
+                        if (status !== 'granted') {
+                            Alert.alert('Permission Denied', 'Location permission is required for nearby orders.');
+                            setActiveFilter("All");
+                            return;
+                        }
+                        const location = await Location.getCurrentPositionAsync({});
+                        const { latitude, longitude } = location.coords;
+                        setUserLocation({ latitude, longitude });
+                        response = await orderService.getNearbyOrders(latitude, longitude);
+                    } else {
+                        response = await orderService.getNearbyOrders(
+                            userLocation.latitude,
+                            userLocation.longitude
+                        );
+                    }
+                    break;
+                case "High Value":
+                    response = await orderService.getHighValueOrders();
+                    break;
+                case "Recent":
+                    response = await orderService.getNewOrderRequest();
+                    break;
+                default:
+                    response = await orderService.getAllPendingOrders();
+            }
+
+            if (response.success) {
+                setOrders(response.data);
+            } else {
+                console.error('API Error:', response);
+                Alert.alert('Error', response.message || 'Failed to fetch orders');
+            }
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+            Alert.alert('Error', 'Failed to fetch orders');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [userLocation]);
+
+    useEffect(() => {
+        fetchOrders(activeFilter);
+    }, [activeFilter, fetchOrders]);
+
+    const handleAccept = async (orderId: string) => {
+        try {
+            setIsLoading(true);
+            const response = await orderService.acceptOrder(orderId);
+            if (response.success) {
+                setOrders(orders.filter(order => order._id !== orderId));
+                Alert.alert('Success', 'Order accepted successfully');
+                router.push(`/order-navigation/${orderId}`);
+            } else {
+                Alert.alert('Error', response.message || 'Failed to accept order');
+            }
+        } catch (error) {
+            console.error('Error accepting order:', error);
+            Alert.alert('Error', 'Failed to accept order');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const handleReject = (orderId: string) => {
-        console.log(`Order ${orderId} rejected`);
-        // Similar to accept, but with different status
-        setOrders(orders.filter(order => order._id !== orderId));
+    const handleReject = async (orderId: string) => {
+        try {
+            setIsLoading(true);
+
+            setOrders((prevOrders) => prevOrders.filter((order) => order._id !== orderId));
+            Alert.alert('Success', 'Order rejected successfully');
+      
+        } catch (error) {
+            console.error('Error rejecting order:', error);
+            Alert.alert('Error', 'Failed to reject order');
+        } finally {
+            setIsLoading(false);
+        }
     };
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await fetchOrders(activeFilter);
+        setRefreshing(false);
+    }, [activeFilter, fetchOrders]);
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50 ">
-
+        <SafeAreaView className="flex-1 bg-gray-50">
             <FilterBar
                 activeFilter={activeFilter}
                 onFilterChange={setActiveFilter}
@@ -398,16 +396,23 @@ const OrderRequestScreen: React.FC = () => {
                     />
                 )}
                 contentContainerStyle={{ padding: 16 }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                    />
+                }
                 ListEmptyComponent={
                     <View className="items-center justify-center py-8">
                         <Ionicons name="document-text-outline" size={64} color="gray" />
-                        <Text className="text-gray-500 text-lg mt-4">No order requests available</Text>
+                        <Text className="text-gray-500 text-lg mt-4">
+                            {isLoading ? 'Loading orders...' : 'No order requests available'}
+                        </Text>
                     </View>
                 }
             />
         </SafeAreaView>
     );
-}
+};
 
 export default OrderRequestScreen;
-
