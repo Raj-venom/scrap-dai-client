@@ -31,6 +31,7 @@ class OrderService {
         }
     }
 
+    // User Order History
     async getMyOrders() {
         try {
             const response = await API.get(`${this.baseUrl}/my-orders`);
@@ -38,6 +39,18 @@ class OrderService {
             return response.data;
         } catch (error: any) {
             console.log('API :: getMyOrders :: error', error.response?.data)
+            return error.response?.data;
+        }
+    }
+
+    // Collector Order History
+    async getCollectorsOrdersHistory() {
+        try {
+            const response = await API.get(`${this.baseUrl}/collectors-orders-history`);
+
+            return response.data;
+        } catch (error: any) {
+            console.log('API :: getCollectorsOrdersHistory :: error', error.response?.data)
             return error.response?.data;
         }
     }
