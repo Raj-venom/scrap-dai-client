@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, FlatList, RefreshControl } from 'react-native';
+import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, FlatList, RefreshControl, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import StatsCard from '@/components/StatsCard';
@@ -7,44 +7,35 @@ import OrderRequestCard from '@/components/collector/OrderRequestCard';
 import ScheduledOrderCard from '@/components/collector/ScheduledOrderCard';
 import orderService from '@/services/order/orderService';
 import { OrderRequest as OrderRequestItem } from '@/types/type';
-
-// Type definitions
-type PriceUpdateCardProps = {
-    material: string;
-    price: string;
-    trend: 'up' | 'down';
-};
+import PriceUpdateCard from '@/components/collector/PriceUpdateCard';
+import dashboardService from '@/services/dashboard/dashboardService';
 
 
-// Component for Price Update Card
-const PriceUpdateCard: React.FC<PriceUpdateCardProps> = ({ material, price, trend }) => {
-    return (
-        <View className="bg-white py-3 px-4 rounded-lg border border-gray-200 flex-1 items-center">
-            <Text className="text-gray-600 mb-1 text-base">{material}</Text>
-            <View className="flex-row items-center">
-                <Text className="font-bold mr-1 text-lg">रु{price}/kg</Text>
-                <Ionicons
-                    name={trend === 'up' ? 'arrow-up' : 'arrow-down'}
-                    size={16}
-                    color={trend === 'up' ? '#32CD32' : '#FF6347'}
-                />
-            </View>
-        </View>
-    );
-};
+type CollectorDashboardStats = {
+    collector: {
+        _id: string;
+        avatar: string;
+        email: string;
+        fullName: string;
+    };
+    totalCompletedOrders: number;
+    totalEarnings: number;
+    totalWeight: number;
+}
 
 const CollectorHomeScreen: React.FC = () => {
     const [orderRequests, setOrderRequests] = useState<OrderRequestItem[]>([]);
     const [todaysOrders, setTodaysOrders] = useState<OrderRequestItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
+    const [collectorStats, setCollectorStats] = useState<CollectorDashboardStats | null>(null);
 
     const fetchNewOrderRequests = async () => {
         try {
             const response = await orderService.getNewOrderRequest();
 
             if (response.success) {
-                console.log(response.data);
+                // console.log(response.data);
                 setOrderRequests(response.data);
             }
         } catch (error: any) {
@@ -58,7 +49,7 @@ const CollectorHomeScreen: React.FC = () => {
             const response = await orderService.getOrderScheduledForToday();
 
             if (response.success) {
-                console.log(response.data);
+                // console.log(response.data);
                 setTodaysOrders(response.data);
             }
 
@@ -68,9 +59,38 @@ const CollectorHomeScreen: React.FC = () => {
         }
     };
 
+    const handleAccept = async (orderId: string) => {
+        try {
+            const response = await orderService.acceptOrder(orderId);
+            if (response.success) {
+                setOrderRequests(orderRequests.filter(order => order._id !== orderId));
+                Alert.alert('Success', 'Order accepted successfully');
+                router.push(`/order-navigation/${orderId}`);
+            } else {
+                Alert.alert('Error', response.message || 'Failed to accept order');
+            }
+        } catch (error) {
+            console.error('Error accepting order:', error);
+            Alert.alert('Error', 'Failed to accept order');
+        }
+    };
+
+    const fetchCollectorStats = async () => {
+        try {
+            const response = await dashboardService.getCollectorStats();
+            if (response.success) {
+                setCollectorStats(response.data);
+            }
+        } catch (error: any) {
+            console.log('API :: getCollectorStats :: error', error.response?.data)
+            return error.response?.data;
+        }
+    };
+
     useEffect(() => {
         setLoading(true);
         ; (async () => {
+            await fetchCollectorStats();
             await fetchNewOrderRequests();
             await fetchOrderScheduledForToday();
             setLoading(false);
@@ -79,6 +99,7 @@ const CollectorHomeScreen: React.FC = () => {
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
+        await fetchCollectorStats();
         await fetchNewOrderRequests();
         await fetchOrderScheduledForToday();
         setRefreshing(false);
@@ -100,10 +121,18 @@ const CollectorHomeScreen: React.FC = () => {
             date={formatDate(item.pickUpDate)}
             material={formatMaterials(item.orderItem)}
             location={item.pickupAddress.formattedAddress}
-            onAccept={() => console.log(`Order ${item._id} accepted`)}
-            onIgnore={() => console.log(`Order ${item._id} ignored`)}
+            onAccept={() => handleAccept(item._id)}
+            onIgnore={() => setOrderRequests(orderRequests.filter(order => order._id !== item._id))}
         />
     );
+
+    if (loading) {
+        return (
+            <View className="flex-1 bg-white justify-center items-center">
+                <ActivityIndicator size="large" color="#0000ff" />
+            </View>
+        );
+    }
 
     return (
         <SafeAreaView className="flex-1 bg-white">
@@ -120,8 +149,8 @@ const CollectorHomeScreen: React.FC = () => {
             >
                 <View className="pt-4 pb-2 flex-row justify-between items-center">
                     <View>
-                        <Text className="text-2xl font-bold text-gray-800">Hi John,</Text>
-                        <Text className="text-gray-500">You've earned रु10,700 till now</Text>
+                        <Text className="text-2xl font-bold text-gray-800">{collectorStats?.collector.fullName || 'Collector'},</Text>
+                        <Text className="text-gray-500">You've earned रु{collectorStats?.totalEarnings?.toLocaleString('en-NP', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} till now</Text>
                     </View>
                     <TouchableOpacity>
                         <Ionicons name="notifications-outline" size={24} color="black" />
@@ -130,8 +159,8 @@ const CollectorHomeScreen: React.FC = () => {
 
                 {/* Stats Cards */}
                 <View className="flex-row gap-3 my-4">
-                    <StatsCard title="Quantity recycled" value="18 Kg" />
-                    <StatsCard title="Orders Completed" value="2" />
+                    <StatsCard title="Quantity recycled" value={`${collectorStats?.totalEarnings}  Kg`} />
+                    <StatsCard title="Orders Completed" value={`${collectorStats?.totalCompletedOrders}`} />
                 </View>
 
                 {/* Price Updates */}
@@ -175,7 +204,7 @@ const CollectorHomeScreen: React.FC = () => {
                 {/* Orders Scheduled*/}
                 <View className="mb-4">
                     <Text className="font-bold text-gray-800 text-lg mb-2">Orders Scheduled for Today</Text>
-                    {todaysOrders.map((order) => (
+                    {todaysOrders.length > 0 ? (todaysOrders.map((order) => (
                         <ScheduledOrderCard
                             key={order._id}
                             date={order.pickUpDate}
@@ -184,7 +213,10 @@ const CollectorHomeScreen: React.FC = () => {
                             // onPress={() => router.push("/order-navigation")}
                             onPress={() => router.push(`/(collector)/(other)/order-navigation/${order._id}`)}
                         />
-                    ))}
+                    ))
+                    ) : (
+                        <Text className="text-gray-500 text-center">No orders scheduled for today</Text>
+                    )}
                 </View>
 
                 <View className="h-16" />

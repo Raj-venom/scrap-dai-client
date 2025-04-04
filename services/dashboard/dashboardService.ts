@@ -15,6 +15,19 @@ class DashboardService {
             return error.response?.data;
         }
     }
+
+    async getCollectorStats() {
+        try {
+            const response = await API.get(`${this.baseUrl}/collector-stats`);
+
+            return response.data;
+        } catch (error: any) {
+            console.log('API :: getCollectorStats :: error', error.response?.data)
+            return error.response?.data;
+        }
+    }
+
+
 }
 
 
