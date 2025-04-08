@@ -152,7 +152,7 @@ const CollectorHomeScreen: React.FC = () => {
                         <Text className="text-2xl font-bold text-gray-800">{collectorStats?.collector.fullName || 'Collector'},</Text>
                         <Text className="text-gray-500">You've earned रु{collectorStats?.totalEarnings?.toLocaleString('en-NP', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} till now</Text>
                     </View>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={() => router.push("/notification")}>
                         <Ionicons name="notifications-outline" size={24} color="black" />
                     </TouchableOpacity>
                 </View>

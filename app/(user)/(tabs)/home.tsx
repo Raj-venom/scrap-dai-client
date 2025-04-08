@@ -61,7 +61,7 @@ export default function HomeScreen() {
                         <Text className="text-2xl font-bold">Hi {userStats?.user.fullName || "User"}</Text>
                         <Text className="text-gray-500">What do you want to sell?</Text>
                     </View>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={() => router.push("/notification")}>
                         <Ionicons name="notifications-outline" size={24} color="black" />
                     </TouchableOpacity>
                 </View>
