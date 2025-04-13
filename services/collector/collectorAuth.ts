@@ -74,6 +74,35 @@ class CollectorAuthService {
         }
     }
 
+    async forgotPassword({ email }: { email: string }) {
+        try {
+            const response = await API.post(`${this.baseUrl}/forgot-password`, {
+                email
+            });
+
+            return response.data;
+        } catch (error: any) {
+            console.log('API :: forgotPassword :: error', error.response?.data)
+            return error.response?.data;
+        }
+    }
+
+    async resetPassword({ password, otp, email }: { password: string, otp: string, email: string }) {
+        try {
+            const response = await API.post(`${this.baseUrl}/reset-password`, {
+                password,
+                otp,
+                email
+            });
+
+            return response.data;
+        } catch (error: any) {
+            console.log('API :: resetPassword :: error', error.response?.data)
+            return error.response?.data;
+        }
+    }
+
+
 }
 
 const collectorAuthService = new CollectorAuthService()
