@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import MapView, { Marker, PROVIDER_DEFAULT, Polyline } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import OrderDetailsCard from '@/components/collector/OrderDetailsCard';
 import orderService from '@/services/order/orderService';
@@ -369,7 +369,7 @@ const OrderNavigationScreen = (): JSX.Element => {
             <View style={styles.mapContainer}>
                 <MapView
                     ref={mapRef}
-                    provider={PROVIDER_DEFAULT}
+                    provider={PROVIDER_GOOGLE}
                     style={styles.map}
                     initialRegion={{
                         latitude: orderDetails.pickupAddress.latitude,

@@ -13,7 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import NextButton from '@/components/NextButton';
 import { Calendar } from 'react-native-calendars';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useSelector, useDispatch } from 'react-redux';
 import { setPickupDate, setPickupAddress, setPickupTime } from '@/contexts/features/userOrder/orderSlice';
@@ -483,6 +483,7 @@ export default function DateLocationScreen(): JSX.Element {
 
           {/* Map */}
           <MapView
+          provider={PROVIDER_GOOGLE}
             ref={mapRef}
             style={styles.map}
             initialRegion={selectedLocation}

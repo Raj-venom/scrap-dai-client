@@ -38,3 +38,6 @@ yarn-error.*
 
 app-example
 delete-me.tsx
+
+/android
+/ios
