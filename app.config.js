@@ -8,7 +8,7 @@ export default ({ config }) => {
         icon: "./assets/images/logo.png",
         scheme: "myapp",
         userInterfaceStyle: "automatic",
-        newArchEnabled: true,
+        newArchEnabled: false,
         ios: {
             supportsTablet: true,
         },

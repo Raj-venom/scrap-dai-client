@@ -483,7 +483,7 @@ export default function DateLocationScreen(): JSX.Element {
 
           {/* Map */}
           <MapView
-          provider={PROVIDER_GOOGLE}
+            provider={PROVIDER_GOOGLE}
             ref={mapRef}
             style={styles.map}
             initialRegion={selectedLocation}
