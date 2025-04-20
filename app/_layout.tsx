@@ -38,6 +38,8 @@ export default function RootLayout() {
         <Stack.Screen name="(user)" options={{ headerShown: false }} />
         <Stack.Screen name="(collector)" options={{ headerShown: false }} />
         <Stack.Screen name="notification" options={{ headerShown: true }} />
+        <Stack.Screen name="term-conditions" options={{ headerShown: true }} />
+
 
         <Stack.Screen
           name="rate-card"

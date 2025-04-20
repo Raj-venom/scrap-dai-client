@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, Linking } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, Linking, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useDispatch } from 'react-redux';
@@ -16,9 +16,18 @@ export default function Profile(): JSX.Element {
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [changePasswordModalVisible, setChangePasswordModalVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+
 
   useEffect(() => {
     loadUserStats();
+  }, []);
+
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadUserStats();
+    setRefreshing(false);
   }, []);
 
   const loadUserStats = async () => {
@@ -155,7 +164,16 @@ export default function Profile(): JSX.Element {
 
   return (
     <View className="flex-1 bg-white">
-      <ScrollView>
+      <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#389936']} // Android
+            tintColor="#389936" // iOS
+          />
+      }
+      >
         {/* Profile Header */}
         <View className="pt-12 pb-6 px-4 bg-primary">
           <Text className="text-2xl font-bold text-white text-center mb-6">Profile</Text>
@@ -191,7 +209,7 @@ export default function Profile(): JSX.Element {
           <MenuItem
             icon="person-outline"
             title="Personal Information"
-            onPress={() => console.log('Personal Information')}
+            onPress={() => router.push("/(user)/(profile)/personal-info")}
           />
 
           <MenuItem
@@ -231,13 +249,7 @@ export default function Profile(): JSX.Element {
           <MenuItem
             icon="document-text-outline"
             title="Terms & Conditions"
-            onPress={() => console.log('Terms & Conditions')}
-          />
-
-          <MenuItem
-            icon="shield-outline"
-            title="Privacy Policy"
-            onPress={() => console.log('Privacy Policy')}
+            onPress={() => router.push('/term-conditions')}
           />
 
           <MenuItem

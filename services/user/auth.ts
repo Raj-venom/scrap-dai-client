@@ -1,3 +1,41 @@
+// router.route("/update-profile").patch(verifyAuthourization(USER_ROLE.USER), upload.single("avatar"), updateUserAvatar)
+
+// const updateUserAvatar = asyncHandler(async (req, res) => {
+
+//     const avatarLocalPath = req.file?.path
+
+//     if (!avatarLocalPath) {
+//         throw new ApiError(400, "Avatar file is missing")
+//     }
+
+//     const avatar = await uploadOnCloudinary(avatarLocalPath)
+
+//     if (!avatar.url) {
+//         throw new ApiError(500, "Failed to upload avatar")
+//     }
+
+//     const user = await User.findByIdAndUpdate(
+//         req.user?._id,
+//         {
+//             $set: {
+//                 avatar: avatar.url
+//             }
+//         },
+//         { new: true }
+//     ).select("-password")
+
+//     if (!user) {
+//         throw new ApiError(500, "Something went wrong while updatating Avatar image")
+//     }
+
+//     return res
+//         .status(200)
+//         .json(
+//             new ApiResponse(200, user, "Avatar image updated successfully")
+//         )
+
+// })
+
 import { userRegisterProps } from "@/types/type";
 import API from "../api";
 import { removeTokens, setTokens } from "../token/tokenService";
@@ -157,7 +195,42 @@ class AuthService {
         }
     }
 
+    async updateUserProfile({ fullName, phone, gender }: { fullName: string, phone: string, gender: string }) {
+        if (fullName?.trim() === "") {
+            throw new Error("Full name is required")
+        }
+        if (phone?.trim().length !== 10) {
+            throw new Error("Phone number must be 10 digits")
+        }
 
+        try {
+            const response = await API.patch(`${this.baseUrl}/update-profile`, {
+                fullName,
+                phone,
+                gender
+            });
+
+            return response.data;
+        } catch (error: any) {
+            console.log('API :: updateUserProfile :: error', error.response?.data)
+            return error.response?.data;
+        }
+    }
+
+    async updateUserAvatar(formData: FormData) {
+        try {
+            const response = await API.patch(`${this.baseUrl}/update-avatar`, formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                }
+            });
+
+            return response.data;
+        } catch (error: any) {
+            console.log('API :: updateUserAvatar :: error', error.response?.data)
+            return error.response?.data;
+        }
+    }
 
 }
 

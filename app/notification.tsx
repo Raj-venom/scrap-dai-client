@@ -41,9 +41,9 @@ export default function NotificationsScreen() {
         try {
             const res = await notificationService.getNotifications(user);
             if (res?.success) {
-                setNotifications(res.data);
+                setNotifications(res?.data);
             } else {
-                Alert.alert('Error', res.message || 'Failed to fetch notifications');
+                // Alert.alert('Error', res?.message || 'Failed to fetch notifications');
             }
         } catch (error) {
             console.error('Error fetching notifications:', error);

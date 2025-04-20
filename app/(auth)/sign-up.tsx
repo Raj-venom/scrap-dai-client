@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Image, Alert } from 'react-native'
+import { View, Text, ScrollView, Image, Alert, TouchableOpacity } from 'react-native'
 import React, { useState } from 'react'
 import { Link, useRouter } from 'expo-router'
 import { icons, images } from '@/constants'
@@ -23,8 +23,10 @@ const SignUp = () => {
     email?: string;
     password?: string;
     phone?: string;
+    terms?: string;
   }>({});
 
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [verification, setVerification] = useState<{
     state: "default" | "success" | "failed" | "pending",
@@ -39,12 +41,14 @@ const SignUp = () => {
 
   const onSignUpPress = async () => {
 
-    let newErrors: { fullName?: string; email?: string; password?: string; phone?: string } = {};
+    let newErrors: { fullName?: string; email?: string; password?: string; phone?: string; terms?: string } = {};
 
     if (!form.fullName.trim()) newErrors.fullName = "Name is required";
     if (!form.email.trim()) newErrors.email = "Email is required";
     if (!form.password.trim()) newErrors.password = "Password is required";
     if (!form.phone.trim()) newErrors.phone = "Phone number is required";
+    if (!agreeToTerms) newErrors.terms = "You must agree to the Terms and Conditions";
+
     console.log('newErrors', newErrors)
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -95,6 +99,10 @@ const SignUp = () => {
       setVerification({ ...verification, state: "failed", error: error?.message || "Something went wrong" })
       // Alert.alert('Error', error?.message)
     }
+  }
+
+  const navigateToTerms = () => {
+    router.push('/term-conditions')
   }
 
   return (
@@ -163,12 +171,33 @@ const SignUp = () => {
             error={errors.phone}
           />
 
+          <View className='flex-row items-center mt-4'>
+            <TouchableOpacity
+              onPress={() => setAgreeToTerms(!agreeToTerms)}
+              className={`w-5 h-5 mr-2 rounded border ${agreeToTerms ? 'bg-primary border-primary' : 'border-gray-400'}`}
+            >
+              {agreeToTerms && (
+                <Text className='text-white text-xs text-center'>✓</Text>
+              )}
+            </TouchableOpacity>
+            <Text className='flex-1 text-textcolor-300'>
+              I agree to the {' '}
+              <Text className='text-primary underline' onPress={navigateToTerms}>
+                Terms and Conditions
+              </Text>
+            </Text>
+          </View>
+
+          {errors.terms && (
+            <Text className='text-red-500 text-xs ml-7 mt-1'>{errors.terms}</Text>
+          )}
+
           <CustomButton
             title='Sign Up'
             onPress={onSignUpPress}
             className='mt-6'
           />
-      
+
           <Link
             href="/sign-in"
             className='text-lg text-center text-textcolor-300 mt-4'

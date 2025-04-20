@@ -126,3 +126,7 @@ export const getStatusColor = (status: string) => {
       return 'text-gray-600';
   }
 };
+
+
+
+export const GENDER_OPTIONS = ["Male", "Female", "Other"];
