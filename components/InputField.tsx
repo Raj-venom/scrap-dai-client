@@ -1,6 +1,7 @@
-import { View, Text, Platform, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Image, TextInput } from 'react-native'
+import { View, Text, Platform, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Image, TextInput, TouchableOpacity } from 'react-native'
 import React, { useState } from 'react'
 import { InputFieldProps } from '@/types/type'
+import { Ionicons } from "@expo/vector-icons";
 
 const InputField = ({
     label,
@@ -16,10 +17,18 @@ const InputField = ({
 }: InputFieldProps) => {
 
     const [focus, setFocus] = useState(false)
+    const [passwordVisible, setPasswordVisible] = useState(false)
+
+
+    const togglePasswordVisibility = () => {
+        setPasswordVisible(!passwordVisible)
+    }
+
+    const isPasswordHidden = secureTextEntry && !passwordVisible
+
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-
         >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss} >
                 <View className='my-2 w-full'  >
@@ -38,9 +47,22 @@ const InputField = ({
                             onFocus={() => setFocus(true)}
                             onBlur={() => setFocus(false)}
                             className={`rounded-full p-4 font-JakartaSemiBold text-[15px] flex-1 ${inputStyle} text-left`}
-                            secureTextEntry={secureTextEntry}
+                            secureTextEntry={isPasswordHidden}
                             {...props}
                         />
+
+                        {secureTextEntry && (
+                            <TouchableOpacity
+                                onPress={togglePasswordVisibility}
+                                className="pr-4"
+                            >
+                                <Ionicons
+                                    name={passwordVisible ? "eye-outline" : "eye-off-outline"}
+                                    size={24}
+                                    color="#666"
+                                />
+                            </TouchableOpacity>
+                        )}
                     </View>
                     {error && <Text className="text-red-500 mt-1 ml-2">{error}</Text>}
                 </View>

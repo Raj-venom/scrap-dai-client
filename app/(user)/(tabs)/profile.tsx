@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Switch, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useDispatch } from 'react-redux';
@@ -7,33 +7,53 @@ import userAuthService from '@/services/user/auth';
 import { logout } from '@/contexts/features/auth/authSlice';
 import { UserStats } from '@/types/type';
 import dashboardService from '@/services/dashboard/dashboardService';
+import ChangePasswordModal from '@/components/ChangePasswordModal';
+import { removeTokens } from '@/services/token/tokenService';
 
 export default function Profile(): JSX.Element {
   const dispatch = useDispatch()
 
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [changePasswordModalVisible, setChangePasswordModalVisible] = useState(false);
 
   useEffect(() => {
-    setLoading(true)
-    try {
-      ; (async () => {
-        const response = await dashboardService.getUserStats();
-        setUserStats(response.data);
-      }
-      )();
-
-    } catch (error: any) {
-      console.log('HomeScreen :: error', error)
-
-    } finally {
-      setLoading(false)
-    }
+    loadUserStats();
   }, []);
 
+  const loadUserStats = async () => {
+    setLoading(true);
+    try {
+      const response = await dashboardService.getUserStats();
+      setUserStats(response.data);
+    } catch (error: any) {
+      console.log('HomeScreen :: error', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangePassword = async (oldPassword: string, newPassword: string) => {
+    try {
+      const response = await userAuthService.changePassword({
+        oldPassword,
+        newPassword
+      });
+
+      if (response.success) {
+        Alert.alert('Success', 'Password changed successfully');
+        setChangePasswordModalVisible(false);
+      } else {
+        Alert.alert('Error', response.message || 'Failed to change password');
+      }
+    } catch (error) {
+      console.log('Change Password Error:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+      throw error;
+    }
+  };
 
   const logoutCall = async () => {
-
     try {
       const response = await userAuthService.logout()
       console.log(response)
@@ -41,20 +61,15 @@ export default function Profile(): JSX.Element {
         dispatch(logout())
         router.replace('/(auth)/sign-in')
       } else {
-        {
-          Alert.alert('Error', response.message)
-        }
-
+        Alert.alert('Error', response.message)
       }
     } catch (error) {
       console.log(error)
       Alert.alert('Error', 'Failed to logout. Please try again.')
-
     }
   }
 
 
-  // Function to handle logout
   const handleLogout = () => {
     Alert.alert(
       "Logout Confirmation",
@@ -72,7 +87,45 @@ export default function Profile(): JSX.Element {
     );
   };
 
-  // Menu item component
+
+  const handleAccoundtDeleteCall = async () => {
+    try {
+      const response = await userAuthService.requestAccountDeletion()
+      if (response.success) {
+        Alert.alert('Success', response.message || 'Account deletion request sent successfully.')
+        await removeTokens()
+        dispatch(logout())
+        router.replace('/(auth)/sign-in')
+      } else {
+        Alert.alert('Error', response.message || 'Failed to delete account.')
+      }
+
+    } catch (error) {
+      console.log(error)
+      Alert.alert('Error', 'Failed to delete account. Please try again.')
+
+    }
+  }
+
+
+  const handleAccoundtDelete = () => {
+    Alert.alert(
+      "Account Deletion",
+      "Are you sure you want to delete your account? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          onPress: handleAccoundtDeleteCall
+        }
+      ]
+    );
+  };
+
+
   const MenuItem = ({ icon, title, onPress, showArrow = true, rightComponent = null }: {
     icon: any,
     title: string,
@@ -138,15 +191,13 @@ export default function Profile(): JSX.Element {
           <MenuItem
             icon="person-outline"
             title="Personal Information"
-            // onPress={() => router.push('/personal-info')}
             onPress={() => console.log('Personal Information')}
           />
 
           <MenuItem
-            icon="location-outline"
-            title="My Addresses"
-            // onPress={() => router.push('/addresses')}
-            onPress={() => console.log('Personal Information')}
+            icon="lock-closed-outline"
+            title="Change Password"
+            onPress={() => setChangePasswordModalVisible(true)}
           />
         </View>
 
@@ -154,23 +205,14 @@ export default function Profile(): JSX.Element {
           <Text className="text-lg font-bold mb-2">Support</Text>
 
           <MenuItem
-            icon="help-circle-outline"
-            title="Help Center"
-            // onPress={() => router.push('/help')}
-            onPress={() => console.log('Personal Information')}
-          />
-
-          <MenuItem
             icon="chatbubble-outline"
             title="Contact Us"
-            // onPress={() => router.push('/contact')}
-            onPress={() => console.log('Personal Information')}
+            onPress={() => Linking.openURL('tel:9823232323')}
           />
 
           <MenuItem
             icon="star-outline"
             title="Rate Us"
-            // if ok is pressed, open play store page for rating of pubg app
             onPress={() => Alert.alert("Rate Us", "This would open the app store rating page", [
               {
                 text: "Cancel",
@@ -189,15 +231,19 @@ export default function Profile(): JSX.Element {
           <MenuItem
             icon="document-text-outline"
             title="Terms & Conditions"
-            // onPress={() => router.push('/terms')}
-            onPress={() => console.log('Personal Information')}
+            onPress={() => console.log('Terms & Conditions')}
           />
 
           <MenuItem
             icon="shield-outline"
             title="Privacy Policy"
-            // onPress={() => router.push('/privacy')}
-            onPress={() => console.log('Personal Information')}
+            onPress={() => console.log('Privacy Policy')}
+          />
+
+          <MenuItem
+            icon="trash-outline"
+            title="Delete Account"
+            onPress={handleAccoundtDelete}
           />
 
           <MenuItem
@@ -208,6 +254,12 @@ export default function Profile(): JSX.Element {
         </View>
       </ScrollView>
 
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        visible={changePasswordModalVisible}
+        onClose={() => setChangePasswordModalVisible(false)}
+        onSubmit={handleChangePassword}
+      />
     </View>
   );
 }
