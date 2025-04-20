@@ -1,4 +1,3 @@
-
 import API from "../api";
 
 import { USER_ROLE } from "@/constants";
@@ -50,6 +49,28 @@ class NotificationService {
             return response.data;
         } catch (error: any) {
             console.log("API :: createNotification :: error", error.response?.data);
+            return error.response?.data;
+        }
+    }
+
+    async markAsAllReadUser(userId: string) {
+        try {
+            const response = await API.patch(`${this.baseUrl}/mark-as-all-read?userId=${userId}`);
+            return response.data;
+        } catch (error: any) {
+            console.log("API :: markAsAllRead :: error", error.response?.data);
+            return error.response?.data;
+        }
+    }
+
+    async markAsAllReadCollector(collectorId: string) {
+        try {
+            const response = await API.patch(
+                `${this.baseUrl}/mark-as-all-read?collectorId=${collectorId}`
+            );
+            return response.data;
+        } catch (error: any) {
+            console.log("API :: markAsAllReadCollector :: error", error.response?.data);
             return error.response?.data;
         }
     }

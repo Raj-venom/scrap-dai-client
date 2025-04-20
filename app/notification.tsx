@@ -8,8 +8,6 @@ import notificationService from '@/services/notification/notificationService';
 import { getRole } from "@/services/token/tokenService";
 import { USER_ROLE } from "@/constants";
 
-
-
 const NOTIFICATION_TYPES = {
     ORDER_ACCEPTED: "ORDER_ACCEPTED",
     ORDER_RECYCLED: "ORDER_RECYCLED",
@@ -35,14 +33,18 @@ export default function NotificationsScreen() {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [markingAllAsRead, setMarkingAllAsRead] = useState(false);
     const router = useRouter();
     const user = useSelector((state: any) => state.auth.userData);
 
-
     const fetchNotifications = async () => {
         try {
-            const data = await notificationService.getNotifications(user);
-            setNotifications(data);
+            const res = await notificationService.getNotifications(user);
+            if (res?.success) {
+                setNotifications(res.data);
+            } else {
+                Alert.alert('Error', res.message || 'Failed to fetch notifications');
+            }
         } catch (error) {
             console.error('Error fetching notifications:', error);
         } finally {
@@ -71,6 +73,36 @@ export default function NotificationsScreen() {
         }
     };
 
+    const markAllAsRead = async () => {
+        try {
+            setMarkingAllAsRead(true);
+            const role = await getRole();
+            let response;
+
+            if (role === USER_ROLE.USER) {
+                response = await notificationService.markAsAllReadUser(user._id);
+            } else if (role === USER_ROLE.COLLECTOR) {
+                response = await notificationService.markAsAllReadCollector(user._id);
+            } else {
+                Alert.alert("Error", "Invalid user role");
+                setMarkingAllAsRead(false);
+                return;
+            }
+
+            if (response.success) {
+                setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+                Alert.alert("Success", "All notifications marked as read");
+            } else {
+                Alert.alert("Error", response.message || "Failed to mark all as read");
+            }
+        } catch (error) {
+            console.error('Error marking all notifications as read:', error);
+            Alert.alert("Error", "Failed to mark all notifications as read");
+        } finally {
+            setMarkingAllAsRead(false);
+        }
+    };
+
     const handleNotificationPress = async (notification: Notification) => {
         try {
             const role = await getRole();
@@ -92,13 +124,10 @@ export default function NotificationsScreen() {
                 } else {
                     Alert.alert("Error", "Invalid user role.");
                 }
-
             }
         } catch (error) {
             console.error('Error handling notification press:', error);
         }
-
-
     };
 
     const getNotificationIcon = (type: string) => {
@@ -113,6 +142,8 @@ export default function NotificationsScreen() {
                 return <Ionicons name="notifications" size={24} color="#FFC107" />;
         }
     };
+
+    const hasUnreadNotifications = notifications.some(n => !n.isRead);
 
     const renderItem = ({ item }: { item: Notification }) => (
         <TouchableOpacity
@@ -145,6 +176,30 @@ export default function NotificationsScreen() {
 
     return (
         <View className="flex-1 bg-gray-100">
+
+            {notifications.length > 0 && (
+                <View>
+                    {hasUnreadNotifications && (
+                        <View className="bg-green-200 p-2  flex-row justify-end items-center">
+                            <TouchableOpacity
+                                className="bg-green-600 px-3 py-2 rounded-md flex-row items-center"
+                                onPress={markAllAsRead}
+                                disabled={markingAllAsRead}
+                            >
+                                {markingAllAsRead ? (
+                                    <ActivityIndicator size="small" color="#ffffff" />
+                                ) : (
+                                    <>
+                                        <Ionicons name="checkmark-done" size={16} color="#ffffff" />
+                                        <Text className="text-white font-semibold ml-1">Mark All Read</Text>
+                                    </>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </View>
+            )}
+
             <FlatList
                 data={notifications}
                 renderItem={renderItem}
