@@ -86,6 +86,20 @@ declare interface UserStats {
     }
 }
 
+declare interface CollectorStats {
+    collector: {
+        _id: string;
+        email: string;
+        fullName: string;
+        avatar: string;
+    };
+    totalCompletedOrders: number;
+    totalWeight: number;
+    totalEarnings: number;
+
+}
+
+
 
 
 // declare interface OrderRequest {
