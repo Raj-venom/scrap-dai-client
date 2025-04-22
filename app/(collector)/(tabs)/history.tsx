@@ -54,7 +54,7 @@ export default function CollectorOrdersScreen(): JSX.Element {
       const response = await orderService.getCollectorsOrdersHistory();
 
       if (response.success) {
-        console.log('API :: getAssignedOrders :: response', response.data);
+        // console.log('API :: getAssignedOrders :: response', response.data);
         setCollectorOrders(response.data);
       }
     } catch (error: any) {

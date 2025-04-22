@@ -48,18 +48,18 @@ export default function HistoryScreen(): JSX.Element {
   const [loading, setLoading] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  console.log("feeback", historyItems[0]?.feedback);
+  // console.log("feeback", historyItems[0]?.feedback);
 
   const fetchMyOrders = async () => {
     try {
       const response = await orderService.getMyOrders();
 
       if (response.success) {
-        console.log(response.data[1].collector);
+        // console.log(response.data[1].collector);
         setHistoryItems(response.data);
       }
     } catch (error: any) {
-      console.log('API :: getMyOrders :: error', error.response?.data);
+      // console.log('API :: getMyOrders :: error', error.response?.data);
     }
   };
 
