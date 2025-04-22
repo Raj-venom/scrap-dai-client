@@ -9,6 +9,7 @@ import orderService from '@/services/order/orderService';
 import { OrderRequest as OrderRequestItem } from '@/types/type';
 import PriceUpdateCard from '@/components/collector/PriceUpdateCard';
 import dashboardService from '@/services/dashboard/dashboardService';
+import scrapService from '@/services/scrap/scrapService';
 
 
 type CollectorDashboardStats = {
@@ -23,13 +24,31 @@ type CollectorDashboardStats = {
     totalWeight: number;
 }
 
+
+type RandomScrapPrice = {
+    scrap: string;
+    price: number;
+}
+
 const CollectorHomeScreen: React.FC = () => {
     const [orderRequests, setOrderRequests] = useState<OrderRequestItem[]>([]);
     const [todaysOrders, setTodaysOrders] = useState<OrderRequestItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [collectorStats, setCollectorStats] = useState<CollectorDashboardStats | null>(null);
+    const [randomScrapPrice, setRandomScrapPrice] = useState<RandomScrapPrice[] | null>(null);
 
+
+    const fetchRandomScrap = async () => {
+        try {
+            const response = await scrapService.getRandomScrapPrice();
+            if (response?.success) {
+                setRandomScrapPrice(response.data);
+            }
+        } catch (error: any) {
+            console.log('API :: getRandomScrap :: error', error.response?.data);
+        }
+    };
     const fetchNewOrderRequests = async () => {
         try {
             const response = await orderService.getNewOrderRequest();
@@ -93,6 +112,7 @@ const CollectorHomeScreen: React.FC = () => {
             await fetchCollectorStats();
             await fetchNewOrderRequests();
             await fetchOrderScheduledForToday();
+            await fetchRandomScrap();
             setLoading(false);
         })().finally(() => setLoading(false));
     }, []);
@@ -102,6 +122,7 @@ const CollectorHomeScreen: React.FC = () => {
         await fetchCollectorStats();
         await fetchNewOrderRequests();
         await fetchOrderScheduledForToday();
+        await fetchRandomScrap();
         setRefreshing(false);
     }, []);
 
@@ -150,7 +171,7 @@ const CollectorHomeScreen: React.FC = () => {
                 <View className="pt-4 pb-2 flex-row justify-between items-center">
                     <View>
                         <Text className="text-2xl font-bold text-gray-800">{collectorStats?.collector.fullName || 'Collector'},</Text>
-                        <Text className="text-gray-500">You've earned रु{collectorStats?.totalEarnings?.toLocaleString('en-NP', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} till now</Text>
+                        <Text className="text-gray-500">Your Total Business रु{collectorStats?.totalEarnings?.toLocaleString('en-NP', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} till now</Text>
                     </View>
                     <TouchableOpacity onPress={() => router.push("/notification")}>
                         <Ionicons name="notifications-outline" size={24} color="black" />
@@ -172,9 +193,13 @@ const CollectorHomeScreen: React.FC = () => {
                         </TouchableOpacity>
                     </View>
                     <View className="flex-row gap-2">
-                        <PriceUpdateCard material="Steel" price="45" trend="down" />
-                        <PriceUpdateCard material="Bottles" price="25" trend="up" />
-                        <PriceUpdateCard material="Newspaper" price="21" trend="up" />
+                        {randomScrapPrice?.map((item, index) => (
+                            <PriceUpdateCard
+                                key={index}
+                                material={item.scrap}
+                                price={item.price.toString()}
+                            />
+                        ))}
                     </View>
                 </View>
 

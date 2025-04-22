@@ -163,7 +163,7 @@ export default function Profile(): JSX.Element {
             <Text className="text-lg font-bold text-green-600">{collectorStats?.totalWeight} kg</Text>
           </View>
           <View className="flex-1 items-center">
-            <Text className="text-gray-500">Total Earnings</Text>
+            <Text className="text-gray-500">Total Business</Text>
             <Text className="text-lg font-bold text-green-600">रु {collectorStats?.totalEarnings}</Text>
           </View>
         </View>
