@@ -36,6 +36,12 @@ interface CollectorOrderItem {
   pickupAddress?: {
     formattedAddress: string;
   };
+  feedback?: {
+    userRating?: number;
+    userReview?: string;
+    collectorRating?: number;
+    collectorReview?: string;
+  };
 }
 
 export default function CollectorOrdersScreen(): JSX.Element {
@@ -67,7 +73,6 @@ export default function CollectorOrdersScreen(): JSX.Element {
     setRefreshing(false);
   }, []);
 
-  // Render a single collector order item using the unified card component
   const renderItem = ({ item }: { item: CollectorOrderItem }) => (
     <OrderHistoryCard
       id={item._id}
@@ -84,6 +89,7 @@ export default function CollectorOrdersScreen(): JSX.Element {
       pickupAddress={item.pickupAddress}
       // Show user info for collector view
       showUserInfo={true}
+      feedback={item?.feedback} 
     />
   );
 

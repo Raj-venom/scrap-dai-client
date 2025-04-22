@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getStatusColor } from '@/constants';
+import { getStatusColor, ORDER_STATUS } from '@/constants';
+import FeedbackComponent from './FeedbackComponent';
 
 interface OrderItem {
     scrap: {
@@ -38,17 +39,20 @@ interface OrderCardProps {
     totalAmount?: number;
     timeline?: TimelineItem[];
     initialExpanded?: boolean;
-    // User info fields (optional for user view, required for collector view)
     user?: User;
     contactNumber?: string;
     pickupAddress?: PickupAddress;
-    // Flag to show user info section (true for collector view, false for user view)
     showUserInfo?: boolean;
-
     collector?: {
         _id: string;
         fullName: string;
         phone: string;
+    };
+    feedback?: {
+        userRating?: number;
+        userReview?: string;
+        collectorRating?: number;
+        collectorReview?: string;
     };
 }
 
@@ -66,7 +70,8 @@ const OrderHistoryCard = ({
     contactNumber,
     pickupAddress,
     showUserInfo = false,
-    collector
+    collector,
+    feedback,
 }: OrderCardProps): JSX.Element => {
     const [isExpanded, setIsExpanded] = useState<boolean>(initialExpanded);
 
@@ -179,30 +184,40 @@ const OrderHistoryCard = ({
 
             {isExpanded && (
                 <View className="px-4 py-3 border-t border-gray-200">
-                    {/* Images section */}
                     {renderImages(scrapImages)}
 
-                    {/* Timeline section if available */}
                     {timeline && timeline.length > 0 && (
-                        <View className="mt-3">
-                            <Text className="font-medium mb-2">Order Timeline:</Text>
-                            {timeline.map((timelineItem, index) => (
-                                <View key={index} className="mb-3 pl-6 relative">
-                                    <View className="absolute left-0 top-0 h-full justify-center items-center">
-                                        <View className="w-3 h-3 rounded-full bg-green-500" />
-                                        {index < timeline.length - 1 && (
-                                            <View className="w-0.5 h-full bg-green-200 absolute top-3" />
-                                        )}
-                                    </View>
-                                    <Text className="font-medium">
-                                        {formatDate(timelineItem.date)}: ({timelineItem.time})
-                                    </Text>
-                                    <Text className="text-gray-600 mt-1">
-                                        {formatTimelineMessage(timelineItem.message, showUserInfo ? "collector" : "user")}
-                                    </Text>
+                        <View className="px-4 py-3 border-t border-gray-200">
+                            <View className="mt-3">
+                                <Text className="font-medium mb-2">Order Timeline:</Text>
+                                {timeline.map((timelineItem, index) => (
+                                    <View key={index} className="mb-3 pl-6 relative">
+                                        <View className="absolute left-0 top-0 h-full justify-center items-center">
+                                            <View className="w-3 h-3 rounded-full bg-green-500" />
+                                            {index < timeline.length - 1 && (
+                                                <View className="w-0.5 h-full bg-green-200 absolute top-3" />
+                                            )}
+                                        </View>
+                                        <Text className="font-medium">
+                                            {formatDate(timelineItem.date)}: ({timelineItem.time})
+                                        </Text>
+                                        <Text className="text-gray-600 mt-1">
+                                            {formatTimelineMessage(timelineItem.message, showUserInfo ? "collector" : "user")}
+                                        </Text>
 
-                                </View>
-                            ))}
+                                    </View>
+                                ))}
+                            </View>
+                            {status === ORDER_STATUS.RECYCLED && (
+                                <FeedbackComponent
+                                    orderId={id}
+                                    role={showUserInfo ? 'collector' : 'user'}
+                                    existingFeedback={feedback}
+                                    onFeedbackSubmitted={() => {
+                                        //    Alert.alert('Feedback submitted successfully!');
+                                    }}
+                                />
+                            )}
                         </View>
                     )}
 

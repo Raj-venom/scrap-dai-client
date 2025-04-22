@@ -35,12 +35,20 @@ interface HistoryItem {
   pickupAddress: {
     formattedAddress: string;
   };
+  feedback?: {
+    userRating?: number;
+    userReview?: string;
+    collectorRating?: number;
+    collectorReview?: string;
+  };
 }
 
 export default function HistoryScreen(): JSX.Element {
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  console.log("feeback", historyItems[0]?.feedback);
 
   const fetchMyOrders = async () => {
     try {
@@ -80,8 +88,7 @@ export default function HistoryScreen(): JSX.Element {
       showUserInfo={false}
       collector={item.collector}
       pickupAddress={item?.pickupAddress}
-
-
+      feedback={item?.feedback} 
     />
   );
 

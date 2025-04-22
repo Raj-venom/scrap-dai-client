@@ -101,34 +101,6 @@ declare interface CollectorStats {
 
 
 
-
-// declare interface OrderRequest {
-//     pickupAddress: {
-//         formattedAddress: string;
-//         latitude: number;
-//         longitude: number;
-//     };
-//     _id: string;
-//     user: string;
-//     collector: null;
-//     pickUpDate: string;
-//     status: string;
-//     estimatedAmount: number;
-//     orderItem: {
-//         scrap: {
-//             _id: string;
-//             name: string;
-//             pricePerKg: number;
-//         };
-//         weight: number;
-//         amount: number;
-//         _id: string;
-//     }[];
-//     scrapImage: string[];
-//     pickUpTime: string;
-//     contactNumber: string;
-// }
-
 declare interface OrderRequest {
     pickupAddress: {
         formattedAddress: string;
