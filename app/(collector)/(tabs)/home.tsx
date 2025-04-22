@@ -108,22 +108,32 @@ const CollectorHomeScreen: React.FC = () => {
 
     useEffect(() => {
         setLoading(true);
-        ; (async () => {
-            await fetchCollectorStats();
-            await fetchNewOrderRequests();
-            await fetchOrderScheduledForToday();
-            await fetchRandomScrap();
-            setLoading(false);
-        })().finally(() => setLoading(false));
+        (async () => {
+            try {
+                await Promise.all([
+                    fetchCollectorStats(),
+                    fetchNewOrderRequests(),
+                    fetchOrderScheduledForToday(),
+                    fetchRandomScrap()
+                ]);
+            } finally {
+                setLoading(false);
+            }
+        })();
     }, []);
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
-        await fetchCollectorStats();
-        await fetchNewOrderRequests();
-        await fetchOrderScheduledForToday();
-        await fetchRandomScrap();
-        setRefreshing(false);
+        try {
+            await Promise.all([
+                fetchCollectorStats(),
+                fetchNewOrderRequests(),
+                fetchOrderScheduledForToday(),
+                fetchRandomScrap()
+            ]);
+        } finally {
+            setRefreshing(false);
+        }
     }, []);
 
     // Format order item materials
@@ -180,7 +190,7 @@ const CollectorHomeScreen: React.FC = () => {
 
                 {/* Stats Cards */}
                 <View className="flex-row gap-3 my-4">
-                    <StatsCard title="Quantity recycled" value={`${collectorStats?.totalEarnings}  Kg`} />
+                    <StatsCard title="Quantity recycled" value={`${collectorStats?.totalWeight}  Kg`} />
                     <StatsCard title="Orders Completed" value={`${collectorStats?.totalCompletedOrders}`} />
                 </View>
 
