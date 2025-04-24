@@ -77,11 +77,12 @@ class AuthService {
         }
     }
 
-    async login({ identifier, password }: { identifier: string, password: string }) {
+    async login({ identifier, password, expoPushToken }: { identifier: string, password: string, expoPushToken: string | null }) {
         try {
             const response = await API.post(`${this.baseUrl}/login`, {
                 identifier,
-                password
+                password,
+                expoPushToken
             });
 
 

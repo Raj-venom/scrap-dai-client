@@ -6,6 +6,16 @@ import { Provider } from 'react-redux'
 import store from '@/contexts/store/store'
 import { Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import * as Notifications from "expo-notifications";
+import { NotificationProvider } from "@/contexts/NotificationContext";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 export default function RootLayout() {
 
@@ -31,33 +41,35 @@ export default function RootLayout() {
   }
 
   return (
-    <Provider store={store}>
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(user)" options={{ headerShown: false }} />
-        <Stack.Screen name="(collector)" options={{ headerShown: false }} />
-        <Stack.Screen name="notification" options={{ headerShown: true }} />
-        <Stack.Screen name="term-conditions" options={{ headerShown: true }} />
+    <NotificationProvider>
+      <Provider store={store}>
+        <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(user)" options={{ headerShown: false }} />
+          <Stack.Screen name="(collector)" options={{ headerShown: false }} />
+          <Stack.Screen name="notification" options={{ headerShown: true }} />
+          <Stack.Screen name="term-conditions" options={{ headerShown: true }} />
 
 
-        <Stack.Screen
-          name="rate-card"
-          options={{
-            headerShown: true,
-            header: () => (
-              <View className="pt-4 pb-3 px-4 flex-row items-center bg-white">
-                <TouchableOpacity onPress={() => router.back()} className="mr-4">
-                  <Ionicons name="chevron-back" size={24} color="black" />
-                </TouchableOpacity>
-                <Text className="text-lg ml-28 font-semibold">Scrap Rate</Text>
-              </View>
+          <Stack.Screen
+            name="rate-card"
+            options={{
+              headerShown: true,
+              header: () => (
+                <View className="pt-4 pb-3 px-4 flex-row items-center bg-white">
+                  <TouchableOpacity onPress={() => router.back()} className="mr-4">
+                    <Ionicons name="chevron-back" size={24} color="black" />
+                  </TouchableOpacity>
+                  <Text className="text-lg ml-28 font-semibold">Scrap Rate</Text>
+                </View>
 
-            )
-          }}
-        />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-    </Provider>
+              )
+            }}
+          />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+      </Provider>
+    </NotificationProvider>
   )
 }

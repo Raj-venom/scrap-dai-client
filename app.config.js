@@ -23,6 +23,7 @@ export default ({ config }) => {
                     apiKey: process.env.GOOGLE_MAPS_API_KEY || "failed-to-load",
                 },
             },
+            "googleServicesFile": "./google-services.json",
         },
         web: {
             bundler: "metro",

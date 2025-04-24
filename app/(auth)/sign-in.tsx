@@ -10,15 +10,21 @@ import { useDispatch, useSelector } from "react-redux"
 import { login as authLogin } from '@/contexts/features/auth/authSlice'
 import ModeToggle from '@/components/ModeToggle'
 import collectorAuthService from '@/services/collector/collectorAuth'
+import { useNotification } from '@/contexts/NotificationContext'
 
 
 const SignIn = () => {
 
   const userMode = useSelector((state: any) => state.auth.userMode)
+  const { notification, expoPushToken, error } = useNotification();
+
+  console.log(expoPushToken, "expoPushToken from sign in")
+
 
   const [form, setForm] = useState({
     identifier: '',
-    password: ''
+    password: '',
+    expoPushToken: expoPushToken || null,
   })
   const [errors, setErrors] = useState<{
     identifier?: string;
