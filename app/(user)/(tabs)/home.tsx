@@ -7,6 +7,8 @@ import { router } from 'expo-router';
 import ImpactCard from '@/components/ImpactCard';
 import dashboardService from '@/services/dashboard/dashboardService';
 import { UserStats } from '@/types/type';
+import notificationService from '@/services/notification/notificationService';
+import { useSelector } from 'react-redux';
 
 
 
@@ -14,6 +16,8 @@ export default function HomeScreen() {
     const [userStats, setUserStats] = useState<UserStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const user = useSelector((state: any) => state.auth.userData);
+    const [UnreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
 
     const fetchUserStats = async () => {
         try {
@@ -24,16 +28,41 @@ export default function HomeScreen() {
         }
     };
 
+    const fetchUnreadNotificationsCount = async () => {
+        try {
+            const response = await notificationService.getUnreadNotificationsCount(user);
+            setUnreadNotificationsCount(response.data.count);
+        } catch (error: any) {
+            console.log('HomeScreen :: error', error);
+        }
+    };
+
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
-        await fetchUserStats();
-        setRefreshing(false);
+        try {
+            await Promise.all([
+                fetchUserStats(),
+                fetchUnreadNotificationsCount()
+            ]);
+        } finally {
+            setRefreshing(false);
+        }
     }, []);
 
     useEffect(() => {
         setLoading(true);
-        fetchUserStats().finally(() => setLoading(false));
+        (async () => {
+            try {
+                await Promise.all([
+                    fetchUserStats(),
+                    fetchUnreadNotificationsCount()
+                ]);
+            } finally {
+                setLoading(false);
+            }
+        })();
     }, []);
+
 
     if (loading) {
         return (
@@ -62,7 +91,14 @@ export default function HomeScreen() {
                         <Text className="text-gray-500">What do you want to sell?</Text>
                     </View>
                     <TouchableOpacity onPress={() => router.push("/notification")}>
-                        <Ionicons name="notifications-outline" size={24} color="black" />
+                        <View className="relative p-2">
+                            <Ionicons name="notifications-outline" size={26} color="black" />
+                            {UnreadNotificationsCount > 0 && (
+                                <View className="absolute top-0 right-0 bg-red-500 rounded-full w-4 h-4 items-center justify-center">
+                                    <Text className="text-white text-[10px] font-bold">{UnreadNotificationsCount}</Text>
+                                </View>
+                            )}
+                        </View>
                     </TouchableOpacity>
                 </View>
 

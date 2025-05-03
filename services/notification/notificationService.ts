@@ -4,6 +4,26 @@ import { USER_ROLE } from "@/constants";
 
 import { getRole } from "@/services/token/tokenService";
 
+
+// router.route("/unread-count").get(getUnreadNotificationsCount);
+// const getUnreadNotificationsCount = asyncHandler(async (req, res) => {
+//     const { userId, collectorId } = req.query;
+//     let query = {};
+
+//     if (userId) {
+//         query.user = userId;
+//     } else if (collectorId) {
+//         query.collector = collectorId;
+//     } else {
+//         return res.status(400).json({ message: "Either user or collector ID is required" });
+//     }
+
+//     const count = await Notification.countDocuments({ ...query, isRead: false });
+
+//     return res.status(200).json(new ApiResponse(200, { count }, "Unread notifications count fetched successfully"));
+// });
+
+
 class NotificationService {
     baseUrl = "/notification";
 
@@ -71,6 +91,17 @@ class NotificationService {
             return response.data;
         } catch (error: any) {
             console.log("API :: markAsAllReadCollector :: error", error.response?.data);
+            return error.response?.data;
+        }
+    }
+
+    async getUnreadNotificationsCount(user: any) {
+        try {
+            const role = await getRole();
+            const response = await API.get(`${this.baseUrl}/unread-count?${role}Id=${user._id}`);
+            return response.data;
+        } catch (error: any) {
+            console.log("API :: getUnreadNotificationsCount :: error", error.response?.data);
             return error.response?.data;
         }
     }
