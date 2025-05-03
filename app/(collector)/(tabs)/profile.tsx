@@ -19,7 +19,10 @@ export default function Profile(): JSX.Element {
 
 
   useEffect(() => {
-    loadCollectorStats();
+    setLoading(true);
+    loadCollectorStats().finally(() => {
+      setLoading(false);
+    });
   }, []);
 
 
@@ -30,7 +33,6 @@ export default function Profile(): JSX.Element {
   }, []);
 
   const loadCollectorStats = async () => {
-    setLoading(true);
     try {
       const response = await dashboardService.getCollectorStats();
       if (response.success) {
@@ -42,8 +44,6 @@ export default function Profile(): JSX.Element {
       setCollectorStats(response.data);
     } catch (error: any) {
       console.log('HomeScreen :: error', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -205,6 +205,12 @@ export default function Profile(): JSX.Element {
 
         <View className="px-4 pb-24">
           <Text className="text-lg font-bold mb-2">Other</Text>
+
+          <MenuItem
+            icon="pricetags-outline"
+            title="Promotions"
+            onPress={() => router.push('/PromotionsScreen')}
+          />
 
           <MenuItem
             icon="document-text-outline"

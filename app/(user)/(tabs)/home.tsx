@@ -112,7 +112,6 @@ export default function HomeScreen() {
                         energySaved={userStats?.environmentalImpact?.energySaved || "0 kWh"}
                         waterSaved={userStats?.environmentalImpact?.waterSaved || "0 Ltrs"}
                         co2EmissionsReduced={userStats?.environmentalImpact?.co2EmissionsReduced || "0 kg CO2"}
-                        oreSaved={userStats?.environmentalImpact?.oreSaved || "0 kg Ore"}
                     />
                 </View>
 

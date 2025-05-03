@@ -10,6 +10,8 @@ import { OrderRequest as OrderRequestItem } from '@/types/type';
 import PriceUpdateCard from '@/components/collector/PriceUpdateCard';
 import dashboardService from '@/services/dashboard/dashboardService';
 import scrapService from '@/services/scrap/scrapService';
+import { useSelector } from 'react-redux';
+import notificationService from '@/services/notification/notificationService';
 
 
 type CollectorDashboardStats = {
@@ -37,8 +39,18 @@ const CollectorHomeScreen: React.FC = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [collectorStats, setCollectorStats] = useState<CollectorDashboardStats | null>(null);
     const [randomScrapPrice, setRandomScrapPrice] = useState<RandomScrapPrice[] | null>(null);
+    const user = useSelector((state: any) => state.auth.userData);
+    const [UnreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
 
 
+    const fetchUnreadNotificationsCount = async () => {
+        try {
+            const response = await notificationService.getUnreadNotificationsCount(user);
+            setUnreadNotificationsCount(response.data.count);
+        } catch (error: any) {
+            console.log('HomeScreen :: error', error);
+        }
+    };
     const fetchRandomScrap = async () => {
         try {
             const response = await scrapService.getRandomScrapPrice();
@@ -114,7 +126,8 @@ const CollectorHomeScreen: React.FC = () => {
                     fetchCollectorStats(),
                     fetchNewOrderRequests(),
                     fetchOrderScheduledForToday(),
-                    fetchRandomScrap()
+                    fetchRandomScrap(),
+                    fetchUnreadNotificationsCount()
                 ]);
             } finally {
                 setLoading(false);
@@ -129,7 +142,8 @@ const CollectorHomeScreen: React.FC = () => {
                 fetchCollectorStats(),
                 fetchNewOrderRequests(),
                 fetchOrderScheduledForToday(),
-                fetchRandomScrap()
+                fetchRandomScrap(),
+                fetchUnreadNotificationsCount()
             ]);
         } finally {
             setRefreshing(false);
@@ -184,7 +198,14 @@ const CollectorHomeScreen: React.FC = () => {
                         <Text className="text-gray-500">Your Total Business रु{collectorStats?.totalEarnings?.toLocaleString('en-NP', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} till now</Text>
                     </View>
                     <TouchableOpacity onPress={() => router.push("/notification")}>
-                        <Ionicons name="notifications-outline" size={24} color="black" />
+                        <View className="relative p-2">
+                            <Ionicons name="notifications-outline" size={26} color="black" />
+                            {UnreadNotificationsCount > 0 && (
+                                <View className="absolute top-0 right-0 bg-red-500 rounded-full w-4 h-4 items-center justify-center">
+                                    <Text className="text-white text-[10px] font-bold">{UnreadNotificationsCount}</Text>
+                                </View>
+                            )}
+                        </View>
                     </TouchableOpacity>
                 </View>
 

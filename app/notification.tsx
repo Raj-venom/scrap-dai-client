@@ -13,7 +13,8 @@ const NOTIFICATION_TYPES = {
     ORDER_RECYCLED: "ORDER_RECYCLED",
     ORDER_CANCELLED: "ORDER_CANCELLED",
     GENERAL: "GENERAL",
-    PROMOTIONAL: "PROMOTIONAL"
+    PROMOTIONAL: "PROMOTIONAL",
+    SYSTEM: "SYSTEM",
 };
 
 interface Notification {
@@ -124,6 +125,8 @@ export default function NotificationsScreen() {
                 } else {
                     Alert.alert("Error", "Invalid user role.");
                 }
+            } else if (notification.type === NOTIFICATION_TYPES.PROMOTIONAL || notification.type === NOTIFICATION_TYPES.GENERAL || notification.type === NOTIFICATION_TYPES.SYSTEM) {
+                router.push(`/PromotionsScreen`);
             }
         } catch (error) {
             console.error('Error handling notification press:', error);

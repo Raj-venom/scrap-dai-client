@@ -20,7 +20,10 @@ export default function Profile(): JSX.Element {
 
 
   useEffect(() => {
-    loadUserStats();
+    setLoading(true);
+    loadUserStats().finally(() => {
+      setLoading(false);
+    });
   }, []);
 
 
@@ -31,14 +34,11 @@ export default function Profile(): JSX.Element {
   }, []);
 
   const loadUserStats = async () => {
-    setLoading(true);
     try {
       const response = await dashboardService.getUserStats();
       setUserStats(response.data);
     } catch (error: any) {
       console.log('HomeScreen :: error', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -172,7 +172,7 @@ export default function Profile(): JSX.Element {
             colors={['#389936']} // Android
             tintColor="#389936" // iOS
           />
-      }
+        }
       >
         {/* Profile Header */}
         <View className="pt-12 pb-6 px-4 bg-primary">
@@ -245,6 +245,12 @@ export default function Profile(): JSX.Element {
 
         <View className="px-4 pb-24">
           <Text className="text-lg font-bold mb-2">Other</Text>
+
+          <MenuItem
+            icon="pricetags-outline"
+            title="Promotions"
+            onPress={() => router.push('/PromotionsScreen')}
+          />
 
           <MenuItem
             icon="document-text-outline"
