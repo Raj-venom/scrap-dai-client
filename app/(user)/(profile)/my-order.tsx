@@ -134,7 +134,7 @@ export default function UserOrderScreen(): JSX.Element {
 
       if (response.success) {
         Alert.alert('Success', 'Order rescheduled successfully');
-        fetchMyOrders();
+        await fetchMyOrders();
         setSelectedOrder(null);
         setNewPickupDate('');
         setNewPickupTime('');
@@ -288,15 +288,15 @@ export default function UserOrderScreen(): JSX.Element {
 
   // Render filter buttons
   const renderFilterButtons = () => (
-    <View className="flex-row justify-between mx-4 mb-4">
+    <View className="flex-row justify-around py-3 px-4 bg-gray-50 border-b border-gray-200">
       {['all', ...Object.values(ORDER_STATUS)].map((status) => (
         <TouchableOpacity
           key={status}
-          className={`px-2 py-1 rounded-lg ${statusFilter === status ? 'bg-gray-800' : 'bg-gray-200'}`}
+          className={`px-3 py-1.5 rounded-full ${statusFilter === status ? 'bg-green-500 border-green-500' : 'bg-white border-gray-300'}`}
           onPress={() => setStatusFilter(status)}
         >
-          <Text className={`text-xs ${statusFilter === status ? 'text-white' : 'text-gray-800'}`}>
-            {status === 'all' ? 'All' : status}
+          <Text className={`text-sm font-medium ${statusFilter === status ? 'text-white' : 'text-gray-600'}`}>
+            {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
           </Text>
         </TouchableOpacity>
       ))}
@@ -351,6 +351,10 @@ export default function UserOrderScreen(): JSX.Element {
               tintColor="#0000ff"
             />
           }
+          showsVerticalScrollIndicator={false}
+          initialNumToRender={7}
+          maxToRenderPerBatch={7}
+          windowSize={7}
         />
       )}
 
