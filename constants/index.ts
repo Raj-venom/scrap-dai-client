@@ -119,7 +119,7 @@ export const getStatusColor = (status: string) => {
     case 'ACCEPTED':
       return 'text-blue-600';
     case 'CANCELLED':
-      return 'text-red-400';
+      return 'text-red-500';
     case 'RECYCLED':
       return 'text-green-600';
     default:

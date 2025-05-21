@@ -168,6 +168,16 @@ class OrderService {
         }
     }
 
+    async updateOrderScheduledDate(orderId: string, pickUpDate: string, pickUpTime: string) {
+        try {
+            const response = await API.patch(`${this.baseUrl}/${orderId}/update-scheduled-date`, { pickUpDate, pickUpTime });
+
+            return response.data;
+        } catch (error: any) {
+            console.log('API :: updateOrderScheduledDate :: error', error.response?.data)
+            return error.response?.data;
+        }
+    }
 
 }
 

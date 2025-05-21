@@ -247,6 +247,13 @@ export default function Profile(): JSX.Element {
           <Text className="text-lg font-bold mb-2">Other</Text>
 
           <MenuItem
+            icon="cart-outline"
+            title="My Orders"
+            onPress={() => router.push('/(user)/(profile)/my-order')}
+          />
+
+
+          <MenuItem
             icon="pricetags-outline"
             title="Promotions"
             onPress={() => router.push('/PromotionsScreen')}
