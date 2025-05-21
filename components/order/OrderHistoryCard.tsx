@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Image, ScrollView, Alert, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getStatusColor, ORDER_STATUS } from '@/constants';
 import FeedbackComponent from './FeedbackComponent';
@@ -226,7 +226,9 @@ const OrderHistoryCard = ({
                         <View className="px-4 pt-3 pb-1 bg-green-50 bg-opacity-10">
                             <Text className="font-medium">Customer: {user.fullName}</Text>
                             {contactNumber && (
-                                <Text className="text-gray-600">Phone: {contactNumber}</Text>
+                                <Text
+                                onPress={() => Linking.openURL(`tel:${contactNumber}`)}
+                                className="text-gray-600">Phone: {contactNumber}</Text>
                             )}
                             {pickupAddress?.formattedAddress && (
                                 <Text className="text-gray-600 mt-1" numberOfLines={2}>
@@ -241,7 +243,9 @@ const OrderHistoryCard = ({
                         <View className="px-4 pt-3 pb-1 bg-green-50 bg-opacity-10">
                             <Text className="font-medium">Collector: {collector?.fullName}</Text>
                             {collector?.phone && (
-                                <Text className="text-gray-600">Phone: {collector.phone}</Text>
+                                <Text
+                                onPress={() => Linking.openURL(`tel:${collector.phone}`)}
+                                className="text-gray-600">Phone: {collector.phone}</Text>
                             )}
                             {pickupAddress?.formattedAddress && (
                                 <Text className="text-gray-600 mt-1" numberOfLines={2}>
