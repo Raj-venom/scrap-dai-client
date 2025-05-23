@@ -47,6 +47,7 @@ const FILTER_OPTIONS = {
   ACCEPTED: 'accepted',
   RECYCLED: 'recycled',
   CANCELLED: 'cancelled',
+  PENDING: 'pending',
 };
 
 export default function HistoryScreen(): JSX.Element {
@@ -71,6 +72,12 @@ export default function HistoryScreen(): JSX.Element {
 
   const applyFilter = (filter: string, items: HistoryItem[]) => {
     switch (filter) {
+      case FILTER_OPTIONS.ALL:
+        setFilteredItems(items);
+        break;
+      case FILTER_OPTIONS.PENDING:
+        setFilteredItems(items.filter(item => item.status.toLowerCase() === 'pending'));
+        break;
       case FILTER_OPTIONS.ACCEPTED:
         setFilteredItems(items.filter(item => item.status.toLowerCase() === 'accepted'));
         break;
@@ -120,8 +127,8 @@ export default function HistoryScreen(): JSX.Element {
   const renderFilterButton = (filter: string, label: string) => (
     <TouchableOpacity
       className={`px-3 py-1.5 rounded-full border ${activeFilter === filter
-          ? 'bg-green-500 border-green-500'
-          : 'bg-white border-gray-300'
+        ? 'bg-green-500 border-green-500'
+        : 'bg-white border-gray-300'
         }`}
       onPress={() => setActiveFilter(filter)}
     >
@@ -147,6 +154,7 @@ export default function HistoryScreen(): JSX.Element {
       {/* Filter Options */}
       <View className="flex-row justify-around py-3 px-4 bg-gray-50 border-b border-gray-200">
         {renderFilterButton(FILTER_OPTIONS.ALL, 'All')}
+        {renderFilterButton(FILTER_OPTIONS.PENDING, 'Pending')}
         {renderFilterButton(FILTER_OPTIONS.ACCEPTED, 'Accepted')}
         {renderFilterButton(FILTER_OPTIONS.RECYCLED, 'Recycled')}
         {renderFilterButton(FILTER_OPTIONS.CANCELLED, 'Cancelled')}

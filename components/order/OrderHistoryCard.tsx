@@ -83,7 +83,7 @@ const OrderHistoryCard = ({
 
     // Format materials string
     const formatMaterials = (items: OrderItem[]) => {
-        return `Material: ${items.map(item => `${item.weight} kg ${item.scrap.name}`).join(', ')}`;
+        return `Material: ${items.map(item => `${item?.weight} kg ${item.scrap?.name}`).join(', ')}`;
     };
 
     // Get amount to display (totalAmount if available, otherwise estimatedAmount)

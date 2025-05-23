@@ -4,6 +4,7 @@ import { Calendar } from 'react-native-calendars';
 import orderService from '@/services/order/orderService';
 import { Ionicons } from '@expo/vector-icons';
 import { ORDER_STATUS } from '@/constants';
+import { isTimeSlotValid } from '@/helpers';
 
 interface OrderItem {
   scrap: {
@@ -30,7 +31,6 @@ interface Order {
   createdAt: string;
 }
 
-
 // Status colors configuration
 const statusColors = {
   [ORDER_STATUS.PENDING]: {
@@ -51,7 +51,6 @@ const statusColors = {
     actionBg: '#10b981',
     actionText: '#ffffff'
   },
-
   [ORDER_STATUS.CANCELLED]: {
     bg: '#fee2e2',
     text: '#b91c1c',
@@ -80,6 +79,8 @@ export default function UserOrderScreen(): JSX.Element {
   const [showTimeDropdown, setShowTimeDropdown] = useState(false);
   const [newPickupDate, setNewPickupDate] = useState('');
   const [newPickupTime, setNewPickupTime] = useState('');
+
+
 
   // Fetch orders from API
   const fetchMyOrders = async () => {
@@ -231,7 +232,7 @@ export default function UserOrderScreen(): JSX.Element {
           <Text className="font-medium mb-1">Scrap Items:</Text>
           {item.orderItem.map((orderItem) => (
             <View key={orderItem._id} className="flex-row justify-between mb-1">
-              <Text className="text-gray-600">{orderItem.scrap.name}</Text>
+              <Text className="text-gray-600">{orderItem.scrap?.name}</Text>
               <View className="flex-row">
                 <Text className="text-gray-600 mr-4">{orderItem.weight} kg</Text>
                 <Text className="text-gray-600">₹{orderItem.amount}</Text>
@@ -391,8 +392,15 @@ export default function UserOrderScreen(): JSX.Element {
               className="border border-gray-300 rounded-lg p-3 mb-6"
               onPress={() => setShowTimeDropdown(true)}
             >
-              <Text className={newPickupTime ? "text-gray-800" : "text-gray-400"}>
+              <Text className={
+                newPickupTime
+                  ? isTimeSlotValid(newPickupTime, newPickupDate)
+                    ? "text-gray-800"
+                    : "text-red-500"
+                  : "text-gray-400"
+              }>
                 {newPickupTime || "Select New Time Slot"}
+                {newPickupTime && !isTimeSlotValid(newPickupTime, newPickupDate) && " (Passed)"}
               </Text>
             </TouchableOpacity>
 
@@ -407,7 +415,7 @@ export default function UserOrderScreen(): JSX.Element {
               <TouchableOpacity
                 className="bg-blue-600 px-6 py-3 rounded-lg"
                 onPress={handleUpdateOrder}
-                disabled={!newPickupDate || !newPickupTime}
+                disabled={!newPickupDate || !newPickupTime || !isTimeSlotValid(newPickupTime, newPickupDate)}
               >
                 <Text className="text-white font-medium">Confirm Reschedule</Text>
               </TouchableOpacity>
@@ -465,16 +473,24 @@ export default function UserOrderScreen(): JSX.Element {
             <FlatList
               data={TIME_SLOTS}
               keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  className={`p-4 border-b border-gray-100 ${newPickupTime === item ? 'bg-green-50' : ''}`}
-                  onPress={() => handleTimeSelect(item)}
-                >
-                  <Text className={`${newPickupTime === item ? 'text-green-600 font-medium' : 'text-gray-800'}`}>
-                    {item}
-                  </Text>
-                </TouchableOpacity>
-              )}
+              renderItem={({ item }) => {
+                const isDisabled = !isTimeSlotValid(item, newPickupDate);
+                return (
+                  <TouchableOpacity
+                    className={`p-4 border-b border-gray-100 ${newPickupTime === item ? 'bg-green-50' : ''}`}
+                    onPress={() => !isDisabled && handleTimeSelect(item)}
+                    disabled={isDisabled}
+                  >
+                    <Text className={`
+                      ${newPickupTime === item ? 'text-green-600 font-medium' : ''}
+                      ${isDisabled ? 'text-gray-400' : 'text-gray-800'}
+                    `}>
+                      {item}
+                      {isDisabled && " (Passed)"}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              }}
             />
           </View>
         </View>

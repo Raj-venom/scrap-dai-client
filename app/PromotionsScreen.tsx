@@ -22,7 +22,7 @@ const PromotionsScreen = () => {
 
     const fetchPromotions = async () => {
         try {
-            const res = await promotionService.getAllPromotions();
+            const res = await promotionService.getActivePromotions();
             if (res.success) {
                 const activePromotions = res?.data?.filter((promo: Promotion) => promo.isActive);
 

@@ -17,6 +17,7 @@ import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useSelector, useDispatch } from 'react-redux';
 import { setPickupDate, setPickupAddress, setPickupTime } from '@/contexts/features/userOrder/orderSlice';
+import { isTimeSlotValid } from '@/helpers';
 
 export default function DateLocationScreen(): JSX.Element {
   const dispatch = useDispatch();
@@ -77,7 +78,8 @@ export default function DateLocationScreen(): JSX.Element {
     return pickupDate.trim() !== '' &&
       selectedAddress.trim() !== '' &&
       pickupTime !== '' &&
-      pickupTime !== 'Select Time';
+      pickupTime !== 'Select Time' &&
+      isTimeSlotValid(pickupTime, pickupDateISO || pickupDate);
   };
 
   // Handle date selection
@@ -279,9 +281,7 @@ export default function DateLocationScreen(): JSX.Element {
 
   const handleNextPress = () => {
     dispatch(setPickupDate(pickupDateISO || convertDisplayDateToISO(pickupDate)));
-
     dispatch(setPickupTime(pickupTime));
-
     dispatch(setPickupAddress({
       formattedAddress: selectedAddress,
       latitude: selectedLocation.latitude,
@@ -321,8 +321,15 @@ export default function DateLocationScreen(): JSX.Element {
             className="border border-gray-300 rounded-md p-3 flex-row justify-between items-center"
             onPress={() => setShowTimeDropdown(true)}
           >
-            <Text className={pickupTime && pickupTime !== 'Select Time' ? "text-black" : "text-gray-400"}>
+            <Text className={
+              pickupTime && pickupTime !== 'Select Time'
+                ? isTimeSlotValid(pickupTime, pickupDateISO || pickupDate)
+                  ? "text-black"
+                  : "text-red-500"
+                : "text-gray-400"
+            }>
               {pickupTime || 'Select Time'}
+              {pickupTime && pickupTime !== 'Select Time' && !isTimeSlotValid(pickupTime, pickupDateISO || pickupDate) && " (Passed)"}
             </Text>
             <Ionicons name="time-outline" size={20} color="gray" />
           </TouchableOpacity>
@@ -417,16 +424,26 @@ export default function DateLocationScreen(): JSX.Element {
             <FlatList
               data={timeSlots.slice(1)} // Skip "Select Time" as it's just a placeholder
               keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  className={`p-4 border-b border-gray-100 ${pickupTime === item ? 'bg-green-50' : ''}`}
-                  onPress={() => handleTimeSelect(item)}
-                >
-                  <Text className={`${pickupTime === item ? 'text-green-600 font-medium' : 'text-gray-800'}`}>
-                    {item}
-                  </Text>
-                </TouchableOpacity>
-              )}
+              renderItem={({ item }) => {
+                const isDisabled = !isTimeSlotValid(item, pickupDateISO || pickupDate);
+                return (
+                  <TouchableOpacity
+                    className={`p-4 border-b border-gray-100 ${pickupTime === item ? 'bg-green-50' : ''}`}
+                    onPress={() => !isDisabled && handleTimeSelect(item)}
+                    disabled={isDisabled}
+                  >
+                    <Text
+                      className={`
+                        ${pickupTime === item ? 'text-green-600 font-medium' : ''}
+                        ${isDisabled ? 'text-gray-400' : 'text-gray-800'}
+                      `}
+                    >
+                      {item}
+                      {isDisabled && " (Passed)"}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              }}
             />
           </View>
         </View>

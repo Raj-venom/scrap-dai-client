@@ -15,6 +15,8 @@ const NOTIFICATION_TYPES = {
     GENERAL: "GENERAL",
     PROMOTIONAL: "PROMOTIONAL",
     SYSTEM: "SYSTEM",
+    ORDER_RESCHEDULED: "ORDER_RESCHEDULED",
+
 };
 
 interface Notification {
@@ -115,7 +117,8 @@ export default function NotificationsScreen() {
             if ([
                 NOTIFICATION_TYPES.ORDER_ACCEPTED,
                 NOTIFICATION_TYPES.ORDER_RECYCLED,
-                NOTIFICATION_TYPES.ORDER_CANCELLED
+                NOTIFICATION_TYPES.ORDER_CANCELLED,
+                NOTIFICATION_TYPES.ORDER_RESCHEDULED
             ].includes(notification.type)) {
 
                 if (role === USER_ROLE.COLLECTOR) {
@@ -127,7 +130,7 @@ export default function NotificationsScreen() {
                 }
             } else if (notification.type === NOTIFICATION_TYPES.PROMOTIONAL || notification.type === NOTIFICATION_TYPES.GENERAL || notification.type === NOTIFICATION_TYPES.SYSTEM) {
                 router.push(`/PromotionsScreen`);
-            }
+            } 
         } catch (error) {
             console.error('Error handling notification press:', error);
         }
@@ -141,6 +144,8 @@ export default function NotificationsScreen() {
                 return <Ionicons name="refresh-circle" size={24} color="#2196F3" />;
             case NOTIFICATION_TYPES.ORDER_CANCELLED:
                 return <Ionicons name="close-circle" size={24} color="#F44336" />;
+            case NOTIFICATION_TYPES.ORDER_RESCHEDULED:
+                return <Ionicons name="time" size={24} color="#FF9800" />;
             default:
                 return <Ionicons name="notifications" size={24} color="#FFC107" />;
         }

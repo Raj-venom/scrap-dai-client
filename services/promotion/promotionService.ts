@@ -31,6 +31,17 @@ class PromotionService {
             return error.response?.data || { success: false, error: error.message };
         }
     }
+
+
+    async getActivePromotions(): Promise<ApiResponse<Promotion[]>> {
+        try {
+            const response = await API.get(`${this.baseUrl}/active`);
+            return response.data;
+        } catch (error: any) {
+            console.log('PromotionService :: getActivePromotions :: error', error.response?.data || error);
+            return error.response?.data || { success: false, error: error.message };
+        }
+    }
 }
 
 const promotionService = new PromotionService();
